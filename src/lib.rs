@@ -4,7 +4,10 @@ use anyhow::Context;
 use async_sqlx_session::MySqlSessionStore;
 use sqlx::mysql;
 
+mod error;
 mod repository;
+
+pub use error::{Error, Result};
 
 #[must_use]
 #[derive(Debug, Clone)]

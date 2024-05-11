@@ -1,0 +1,16 @@
+use axum::http::StatusCode;
+use axum::response::{IntoResponse, Response};
+
+#[must_use]
+#[derive(Debug, thiserror::Error)]
+#[error(transparent)]
+pub struct Error(#[from] anyhow::Error);
+
+impl IntoResponse for Error {
+    fn into_response(self) -> Response {
+        eprintln!("{self}");
+        StatusCode::INTERNAL_SERVER_ERROR.into_response()
+    }
+}
+
+pub type Result<T, E = Error> = ::std::result::Result<T, E>;
