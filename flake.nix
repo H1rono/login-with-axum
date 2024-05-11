@@ -17,7 +17,7 @@
           inherit system;
           overlays = [ fenix.overlays.default ];
         };
-        inherit (pkgs) lib;
+        inherit (pkgs) lib stdenv;
         toolchain = pkgs.fenix.fromToolchainFile {
           file = ./rust-toolchain.toml;
           sha256 = "sha256-opUgs6ckUQCyDxcB9Wy51pqhd0MPGHUVbwRKKPGiwZU=";
@@ -33,8 +33,10 @@
           version = "0.1.0";
           src = ./.;
           cargoLock.lockFile = ./Cargo.lock;
-          nativeBuildInputs = [ ];
-          buildInputs = [ ];
+          nativeBuildInputs = [ pkgs.pkg-config ];
+          buildInputs = [ ] ++ lib.optionals stdenv.isDarwin [
+            libiconv
+          ];
           doCheck = false;
         };
 
