@@ -4,6 +4,7 @@ use anyhow::Context;
 use async_sqlx_session::MySqlSessionStore;
 use sqlx::mysql;
 
+mod app;
 mod error;
 mod repository;
 
@@ -39,6 +40,15 @@ pub fn db_options_from_env(prefix: &str) -> anyhow::Result<mysql::MySqlConnectOp
     Ok(options)
 }
 
-pub fn make_router() -> axum::Router {
-    axum::Router::new().route("/ping", axum::routing::get(|| async { "pong" }))
+#[must_use]
+#[derive(Debug, Clone)]
+pub struct AppState {
+    repository: Repository,
+}
+
+pub async fn make_router(state: AppState) -> axum::Router {
+    axum::Router::new()
+        .route("/ping", axum::routing::get(|| async { "pong" }))
+        .route("/api/register", axum::routing::post(app::register))
+        .with_state(state)
 }
