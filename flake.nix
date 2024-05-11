@@ -35,13 +35,13 @@
           cargoLock.lockFile = ./Cargo.lock;
           nativeBuildInputs = [ pkgs.pkg-config ];
           buildInputs = [ ] ++ lib.optionals stdenv.isDarwin [
-            libiconv
+            pkgs.libiconv
           ];
           doCheck = false;
         };
 
         devShells.default = pkgs.mkShell {
-          packages = [ toolchain ];
+          packages = with pkgs; [ toolchain pkg-config libiconv ];
         };
       });
 }
