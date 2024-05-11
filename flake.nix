@@ -26,6 +26,13 @@
           rustc = toolchain;
           cargo = toolchain;
         };
+        nativeBuildInputs = [ pkgs.pkg-config ];
+        buildInputs = with pkgs; [
+          openssl
+        ] ++ lib.optionals stdenv.isDarwin [
+          libiconv
+          darwin.Security
+        ];
       in
       {
         packages.default = rustPlatform.buildRustPackage {
@@ -33,15 +40,12 @@
           version = "0.1.0";
           src = ./.;
           cargoLock.lockFile = ./Cargo.lock;
-          nativeBuildInputs = [ pkgs.pkg-config ];
-          buildInputs = [ ] ++ lib.optionals stdenv.isDarwin [
-            pkgs.libiconv
-          ];
           doCheck = false;
+          inherit nativeBuildInputs buildInputs;
         };
 
         devShells.default = pkgs.mkShell {
-          packages = with pkgs; [ toolchain pkg-config libiconv ];
+          packages = [ toolchain ] ++ nativeBuildInputs ++ buildInputs;
         };
       });
 }
