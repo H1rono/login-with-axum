@@ -10,5 +10,10 @@ default-run = "main"
 anyhow = "1.0"
 serde = { version = "1.0", features = [ "derive" ] }
 serde_json = "1.0"
+uuid = { version = "1.8", features = [ "v4", "serde" ] }
 tokio = { version = "1.25", features = [ "rt", "macros", "signal", "time" ] }
 axum = "0.7"
+
+[dependencies.sqlx]
+version = "0.7"
+features = ["runtime-tokio", "tls-native-tls", "mysql", "chrono", "uuid"]
