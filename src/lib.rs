@@ -49,6 +49,7 @@ pub struct AppState {
 pub async fn make_router(state: AppState) -> axum::Router {
     axum::Router::new()
         .route("/ping", axum::routing::get(|| async { "pong" }))
+        .route("/me", axum::routing::get(app::me))
         .route("/api/register", axum::routing::post(app::register))
         .route("/api/login", axum::routing::post(app::login))
         .with_state(state)

@@ -1,7 +1,8 @@
 use anyhow::{anyhow, Context};
 use axum::extract::{Json, State};
 use axum::http::{header::SET_COOKIE, HeaderMap};
-use axum::response::Redirect;
+use axum::response::{Html, Redirect};
+use axum_extra::{headers::Cookie, TypedHeader};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -72,4 +73,36 @@ pub async fn login(
             .with_context(|| "failed to set cookie to header value")?,
     );
     Ok((headers, Redirect::to("/me")))
+}
+
+pub async fn me(
+    State(app): State<AppState>,
+    TypedHeader(cookie): TypedHeader<Cookie>,
+) -> crate::Result<Html<String>> {
+    let session_cookie = cookie
+        .get("cookie")
+        .ok_or_else(|| anyhow!("Unauthorized"))?;
+    let user = app
+        .repository
+        .load_session_from_cookie(session_cookie)
+        .await?
+        .ok_or_else(|| anyhow!("user not found"))?;
+    let repository::User {
+        id,
+        display_id,
+        name,
+    } = user;
+    let html = format!(
+        r#"
+    <!DOCTYPE html>
+    <html>
+        <head><title>Hello, {display_id}!</title></head>
+        <body>
+            <h1>Hello, {name}!</h1>
+            <p>Your id is "{id:?}".</p>
+        </body>
+    </html>
+    "#
+    );
+    Ok(Html(html))
 }
