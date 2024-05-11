@@ -93,7 +93,7 @@ impl Repository {
         query("INSERT INTO `users` (`id`, `display_id`, `name`) VALUES (?, ?, ?)")
             .bind(user.id)
             .bind(user.display_id)
-            .bind(user.id)
+            .bind(user.name)
             .execute(&self.pool)
             .await?;
         Ok(())

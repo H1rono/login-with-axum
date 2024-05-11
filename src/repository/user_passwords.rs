@@ -10,7 +10,7 @@ impl Repository {
         &self,
         id: UserId,
     ) -> sqlx::Result<Option<UserPassword>> {
-        query_as("SELECT * FROM `user_passwords` WHERE `id` = ?")
+        query_as("SELECT * FROM `user_passwords` WHERE `user_id` = ?")
             .bind(id)
             .fetch_optional(&self.pool)
             .await

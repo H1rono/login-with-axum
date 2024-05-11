@@ -8,7 +8,8 @@ pub struct Error(#[from] anyhow::Error);
 
 impl IntoResponse for Error {
     fn into_response(self) -> Response {
-        eprintln!("{self}");
+        let error = self.0;
+        eprintln!("{error:?}");
         StatusCode::INTERNAL_SERVER_ERROR.into_response()
     }
 }

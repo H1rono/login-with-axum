@@ -20,7 +20,7 @@ pub struct RegisterUserRequest {
 pub async fn register(
     State(app): State<AppState>,
     Json(req): Json<RegisterUserRequest>,
-) -> Result<Json<repository::User>, crate::error::Error> {
+) -> crate::Result<Json<repository::User>> {
     // TODO: validation
     let id = Uuid::new_v4();
     let user = repository::User {

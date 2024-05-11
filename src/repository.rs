@@ -48,6 +48,7 @@ pub struct User {
 #[derive(Debug, Clone, Deserialize, Serialize, FromRow)]
 pub struct UserPassword {
     #[serde(rename = "user_id")]
+    #[sqlx(rename = "user_id")]
     pub id: UserId,
     pub psk: String,
 }
