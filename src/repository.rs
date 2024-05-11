@@ -13,7 +13,7 @@ const MIGRATOR: sqlx::migrate::Migrator = sqlx::migrate!("./migrations");
 
 #[allow(unused)]
 impl Repository {
-    async fn connect_with(options: mysql::MySqlConnectOptions) -> sqlx::Result<Self> {
+    pub async fn connect_with(options: mysql::MySqlConnectOptions) -> sqlx::Result<Self> {
         let pool = mysql::MySqlPool::connect_with(options).await?;
         let session_store =
             MySqlSessionStore::from_client(pool.clone()).with_table_name("user_sessions");
@@ -24,7 +24,7 @@ impl Repository {
         })
     }
 
-    async fn migrate(&self) -> sqlx::Result<()> {
+    pub async fn migrate(&self) -> sqlx::Result<()> {
         MIGRATOR.run(&self.pool).await?;
         self.session_store.migrate().await?;
         Ok(())

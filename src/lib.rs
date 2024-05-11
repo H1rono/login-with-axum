@@ -8,7 +8,7 @@ mod repository;
 
 #[must_use]
 #[derive(Debug, Clone)]
-struct Repository {
+pub struct Repository {
     pool: mysql::MySqlPool,
     session_store: MySqlSessionStore,
     bcrypt_cost: u32,
