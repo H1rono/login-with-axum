@@ -1,0 +1,42 @@
+services:
+
+  db:
+    image: mariadb:lts
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-root}
+      - MYSQL_USER=${MYSQL_USER:-db}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD:-fakepassword}
+      - MYSQL_DATABASE=${MYSQL_DATABASE:-db}
+    expose:
+      - 3306
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-uroot",
+          "-p${MYSQL_ROOT_PASSWORD:-root}"
+        ]
+      interval: 10s
+      timeout: 5s
+      start_period: 5s
+      retries: 5
+
+  app:
+    build: .
+    image: login-with-axum
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-root}
+      - MYSQL_USER=${MYSQL_USER:-db}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD:-fakepassword}
+      - MYSQL_DATABASE=${MYSQL_DATABASE:-db}
+      - MYSQL_HOSTNAME=db
+      - MYSQL_PORT=3306
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - 4176:${PORT:-4176}
