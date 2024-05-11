@@ -1,4 +1,7 @@
+use anyhow::{anyhow, Context};
 use axum::extract::{Json, State};
+use axum::http::{header::SET_COOKIE, HeaderMap};
+use axum::response::Redirect;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -33,4 +36,40 @@ pub async fn register(
         .save_raw_password(user.id, &req.password)
         .await?;
     Ok(Json(user))
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct LoginUserRequest {
+    pub display_id: String,
+    pub password: String,
+}
+
+pub async fn login(
+    State(app): State<AppState>,
+    Json(req): Json<LoginUserRequest>,
+) -> crate::Result<(HeaderMap, Redirect)> {
+    let user = app
+        .repository
+        .get_user_by_display_id(&req.display_id)
+        .await
+        .with_context(|| "failed to get user by display id")?
+        .ok_or_else(|| anyhow!("user not found"))?;
+    let verification = app
+        .repository
+        .verify_user_password(user.id, &req.password)
+        .await
+        .with_context(|| "failed to verify password")?
+        .ok_or_else(|| anyhow!("password not found"))?;
+    if !verification {
+        return Err(anyhow!("Unauthorized").into());
+    }
+    let cookie_value = app.repository.create_session_for_user(user).await?;
+    let mut headers = HeaderMap::new();
+    headers.insert(
+        SET_COOKIE,
+        format!("cookie={cookie_value}")
+            .parse()
+            .with_context(|| "failed to set cookie to header value")?,
+    );
+    Ok((headers, Redirect::to("/me")))
 }
