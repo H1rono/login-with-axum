@@ -39,7 +39,10 @@
           pname = "login-with-axum";
           version = "0.1.0";
           src = ./.;
-          cargoLock.lockFile = ./Cargo.lock;
+          cargoLock = {
+            lockFile = ./Cargo.lock;
+            allowBuiltinFetchGit = true;
+          };
           doCheck = false;
           inherit nativeBuildInputs buildInputs;
         };
