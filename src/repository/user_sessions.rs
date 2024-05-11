@@ -13,7 +13,7 @@ impl Repository {
             .with_context(|| "failed to insert user into session")?;
         let res = self
             .session_store
-            .store_session(session.clone())
+            .store_session(session)
             .await
             .with_context(|| "failed to save session to database")?
             .with_context(|| "unexpected error while converting session to cookie")?;
