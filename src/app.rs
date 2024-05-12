@@ -2,6 +2,7 @@ use anyhow::{anyhow, Context};
 use axum::extract::{Json, State};
 use axum::http::{header::SET_COOKIE, HeaderMap};
 use axum::response::{Html, Redirect};
+use axum::Router;
 use axum_extra::{headers::Cookie, TypedHeader};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -105,4 +106,11 @@ pub async fn me(
     "#
     );
     Ok(Html(html))
+}
+
+pub fn api_routes() -> Router<AppState> {
+    use axum::routing::post;
+    Router::new()
+        .route("/register", post(register))
+        .route("/login", post(login))
 }
