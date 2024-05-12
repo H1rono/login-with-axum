@@ -1,3 +1,4 @@
+use tower_http::trace::TraceLayer;
 use tracing_subscriber::EnvFilter;
 
 use login_with_axum as lib;
@@ -13,7 +14,7 @@ async fn main() -> anyhow::Result<()> {
     let repo = lib::Repository::connect_with(options).await?;
     repo.migrate().await?;
     let app_state = lib::AppState::new(repo);
-    let app = lib::make_router(app_state);
+    let app = lib::make_router(app_state).layer(TraceLayer::new_for_http());
     let port: u16 = std::env::var("PORT")
         .unwrap_or_else(|_| "4176".to_string())
         .parse()?;
