@@ -93,18 +93,11 @@ pub async fn me(
         display_id,
         name,
     } = user;
-    let html = format!(
-        r#"
-    <!DOCTYPE html>
-    <html>
-        <head><title>Hello, {display_id}!</title></head>
-        <body>
-            <h1>Hello, {name}!</h1>
-            <p>Your id is "{id:?}".</p>
-        </body>
-    </html>
-    "#
-    );
+    let html = std::fs::read_to_string("./public/me.html")
+        .with_context(|| "failed to read public/me.html")?
+        .replace("{{display_id}}", &display_id)
+        .replace("{{name}}", &name)
+        .replace("{{id}}", &id.to_string());
     Ok(Html(html))
 }
 
