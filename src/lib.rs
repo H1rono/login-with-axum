@@ -46,7 +46,7 @@ pub struct AppState {
     repository: Repository,
 }
 
-pub async fn make_router(state: AppState) -> axum::Router {
+pub fn make_router(state: AppState) -> axum::Router {
     axum::Router::new()
         .route("/ping", axum::routing::get(|| async { "pong" }))
         .route("/me", axum::routing::get(app::me))

@@ -13,7 +13,7 @@ async fn main() -> anyhow::Result<()> {
     let repo = lib::Repository::connect_with(options).await?;
     repo.migrate().await?;
     let app_state = lib::AppState::new(repo);
-    let app = lib::make_router(app_state).await;
+    let app = lib::make_router(app_state);
     let port: u16 = std::env::var("PORT")
         .unwrap_or_else(|_| "4176".to_string())
         .parse()?;
