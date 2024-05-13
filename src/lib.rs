@@ -48,6 +48,7 @@ pub struct AppState {
 
 pub fn make_router(state: AppState) -> axum::Router {
     axum::Router::new()
+        .nest("/", app::public_routes())
         .route("/ping", axum::routing::get(|| async { "pong" }))
         .route("/me", axum::routing::get(app::me))
         .nest("/api", app::api_routes())

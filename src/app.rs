@@ -101,6 +101,18 @@ pub async fn me(
     Ok(Html(html))
 }
 
+pub fn public_routes() -> Router<AppState> {
+    use tower_http::services::{Redirect, ServeFile};
+    Router::new()
+        .route_service(
+            "/",
+            Redirect::<Body>::permanent("/index.html".parse().unwrap()),
+        )
+        .route_service("/index.html", ServeFile::new("./public/index.html"))
+        .route_service("/login.html", ServeFile::new("./public/login.html"))
+        .route_service("/signup.html", ServeFile::new("./public/signup.html"))
+}
+
 pub fn api_routes() -> Router<AppState> {
     use axum::routing::post;
     Router::new()
