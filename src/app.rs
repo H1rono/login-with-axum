@@ -1,5 +1,6 @@
 use anyhow::{anyhow, Context};
-use axum::extract::{Json, State};
+use axum::body::Body;
+use axum::extract::{Form, State};
 use axum::http::{header::SET_COOKIE, HeaderMap};
 use axum::response::{Html, Redirect};
 use axum::Router;
@@ -24,8 +25,8 @@ pub struct RegisterUserRequest {
 
 pub async fn register(
     State(app): State<AppState>,
-    Json(req): Json<RegisterUserRequest>,
-) -> crate::Result<Json<repository::User>> {
+    Form(req): Form<RegisterUserRequest>,
+) -> crate::Result<Redirect> {
     // TODO: validation
     let id = Uuid::new_v4();
     let user = repository::User {
@@ -37,7 +38,7 @@ pub async fn register(
     app.repository
         .save_raw_password(user.id, &req.password)
         .await?;
-    Ok(Json(user))
+    Ok(Redirect::to("/login.html"))
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -48,7 +49,7 @@ pub struct LoginUserRequest {
 
 pub async fn login(
     State(app): State<AppState>,
-    Json(req): Json<LoginUserRequest>,
+    Form(req): Form<LoginUserRequest>,
 ) -> crate::Result<(HeaderMap, Redirect)> {
     let user = app
         .repository
@@ -69,7 +70,7 @@ pub async fn login(
     let mut headers = HeaderMap::new();
     headers.insert(
         SET_COOKIE,
-        format!("cookie={cookie_value}")
+        format!("ax_session={cookie_value}; Path=/; HttpOnly")
             .parse()
             .with_context(|| "failed to set cookie to header value")?,
     );
@@ -81,7 +82,7 @@ pub async fn me(
     TypedHeader(cookie): TypedHeader<Cookie>,
 ) -> crate::Result<Html<String>> {
     let session_cookie = cookie
-        .get("cookie")
+        .get("ax_session")
         .ok_or_else(|| anyhow!("Unauthorized"))?;
     let user = app
         .repository
