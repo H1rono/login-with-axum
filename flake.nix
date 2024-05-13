@@ -33,9 +33,7 @@
           libiconv
           darwin.Security
         ];
-      in
-      {
-        packages.default = rustPlatform.buildRustPackage {
+        appBinary = rustPlatform.buildRustPackage {
           pname = "login-with-axum";
           version = "0.1.0";
           src = ./.;
@@ -45,6 +43,30 @@
           };
           doCheck = false;
           inherit nativeBuildInputs buildInputs;
+        };
+        publicAssets = stdenv.mkDerivation {
+          name = "login-with-axum-public-assets";
+          src = ./.;
+          phases = [ "unpackPhase" "installPhase" ];
+          installPhase = ''
+            mkdir -p $out
+            cp -R $src/public $out/public
+          '';
+        };
+        appFull = pkgs.symlinkJoin rec {
+          pname = "login-with-axum-full";
+          version = "0.1.0";
+          name = "${pname}-${version}";
+          paths = [
+            appBinary
+            publicAssets
+          ];
+        };
+      in
+      {
+        packages = {
+          default = appFull;
+          inherit appBinary appFull publicAssets;
         };
 
         devShells.default = pkgs.mkShell {
