@@ -7,9 +7,10 @@ use axum::response::{IntoResponse, Response};
 pub struct Error(#[from] anyhow::Error);
 
 impl IntoResponse for Error {
+    #[tracing::instrument(skip_all)]
     fn into_response(self) -> Response {
         let error = self.0;
-        eprintln!("{error:?}");
+        tracing::error!("{error:?}");
         StatusCode::INTERNAL_SERVER_ERROR.into_response()
     }
 }
