@@ -3,10 +3,10 @@ services:
   db:
     image: mariadb:lts
     environment:
-      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-root}
-      - MYSQL_USER=${MYSQL_USER:-db}
-      - MYSQL_PASSWORD=${MYSQL_PASSWORD:-fakepassword}
-      - MYSQL_DATABASE=${MYSQL_DATABASE:-db}
+      - MARIADB_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-root}
+      - MARIADB_USER=${MYSQL_USER:-db}
+      - MARIADB_PASSWORD=${MYSQL_PASSWORD:-fakepassword}
+      - MARIADB_DATABASE=${MYSQL_DATABASE:-db}
     expose:
       - 3306
     ports:
@@ -15,10 +15,10 @@ services:
       test:
         [
           "CMD",
-          "mysqladmin",
-          "ping",
-          "-uroot",
-          "-p${MYSQL_ROOT_PASSWORD:-root}"
+          "healthcheck.sh",
+          "--su-mysql",
+          "--connect",
+          "--innodb_initialized"
         ]
       interval: 10s
       timeout: 5s
