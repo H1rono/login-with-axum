@@ -67,13 +67,14 @@ pub async fn login(
         return Err(anyhow!("Unauthorized").into());
     }
     let cookie_value = app.repository.create_session_for_user(user).await?;
-    let mut headers = HeaderMap::new();
-    headers.insert(
+    let headers: HeaderMap = [(
         SET_COOKIE,
         format!("ax_session={cookie_value}; Path=/; HttpOnly")
             .parse()
             .with_context(|| "failed to set cookie to header value")?,
-    );
+    )]
+    .into_iter()
+    .collect();
     Ok((headers, Redirect::to("/me")))
 }
 
