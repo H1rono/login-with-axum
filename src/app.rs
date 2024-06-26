@@ -78,6 +78,29 @@ pub async fn login(
     Ok((headers, Redirect::to("/me")))
 }
 
+pub async fn logout(
+    State(app): State<AppState>,
+    TypedHeader(cookie): TypedHeader<Cookie>,
+) -> crate::Result<(HeaderMap, Redirect)> {
+    let session_cookie = cookie
+        .get("ax_session")
+        .ok_or_else(|| anyhow!("Unauthorized"))?;
+    app.repository
+        .destroy_session_for_cookie(session_cookie)
+        .await?
+        .ok_or_else(|| anyhow!("no matching sessoin found"))?;
+    // TODO: add attribute `Expires` with chrono
+    let headers: HeaderMap = [(
+        SET_COOKIE,
+        "ax_session=; Max-Age=-1"
+            .parse()
+            .with_context(|| "failed to set cookie header value")?,
+    )]
+    .into_iter()
+    .collect();
+    Ok((headers, Redirect::to("/")))
+}
+
 pub async fn me(
     State(app): State<AppState>,
     TypedHeader(cookie): TypedHeader<Cookie>,
@@ -120,4 +143,5 @@ pub fn api_routes() -> Router<AppState> {
     Router::new()
         .route("/register", post(register))
         .route("/login", post(login))
+        .route("/logout", post(logout))
 }

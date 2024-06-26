@@ -24,4 +24,12 @@ impl Repository {
         let session = self.session_store.load_session(cookie.to_string()).await?;
         Ok(session.and_then(|s| s.get("user")))
     }
+
+    pub async fn destroy_session_for_cookie(&self, cookie: &str) -> anyhow::Result<Option<()>> {
+        let Some(session) = self.session_store.load_session(cookie.to_string()).await? else {
+            return Ok(None);
+        };
+        self.session_store.destroy_session(session).await?;
+        Ok(Some(()))
+    }
 }
