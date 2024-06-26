@@ -92,7 +92,7 @@ pub async fn logout(
     // TODO: add attribute `Expires` with chrono
     let headers: HeaderMap = [(
         SET_COOKIE,
-        "ax_session=; Max-Age=-1"
+        "ax_session=; Max-Age=-1; Path=/; HttpOnly"
             .parse()
             .with_context(|| "failed to set cookie header value")?,
     )]
