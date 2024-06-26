@@ -30,3 +30,11 @@ git = "https://github.com/maxcountryman/async-sqlx-session.git"
 default-features = false
 branch = "sqlx-0.7"
 features = ["mysql"]
+
+[lints.clippy]
+
+pedantic.level = "deny"
+pedantic.priority = 0
+
+missing_errors_doc.level = "allow"
+missing_errors_doc.priority = 1
