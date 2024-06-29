@@ -35,6 +35,7 @@ services:
       - MYSQL_DATABASE=${MYSQL_DATABASE:-db}
       - MYSQL_HOSTNAME=db
       - MYSQL_PORT=3306
+      - PREFIX=${PREFIX:-}
     depends_on:
       db:
         condition: service_healthy
