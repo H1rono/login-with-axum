@@ -13,8 +13,9 @@ async fn main() -> anyhow::Result<()> {
         .or_else(|_| lib::db_options_from_env("NS_MARIADB_"))?;
     let repo = lib::Repository::connect_with(options).await?;
     repo.migrate().await?;
-    let app_state = lib::AppState::new(repo);
-    let app = lib::make_router(app_state).layer(TraceLayer::new_for_http());
+    let prefix = std::env::var("PREFIX").unwrap_or_default();
+    let app_state = lib::AppState::new(repo, &prefix);
+    let app = lib::make_router(app_state, &prefix).layer(TraceLayer::new_for_http());
     let port: u16 = std::env::var("PORT")
         .unwrap_or_else(|_| "4176".to_string())
         .parse()?;

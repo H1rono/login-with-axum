@@ -3,6 +3,7 @@ use axum::body::Body;
 use axum::extract::{Form, State};
 use axum::http::{header::SET_COOKIE, HeaderMap};
 use axum::response::{Html, Redirect};
+use axum::routing::get;
 use axum::Router;
 use axum_extra::{headers::Cookie, TypedHeader};
 use serde::{Deserialize, Serialize};
@@ -10,9 +11,20 @@ use uuid::Uuid;
 
 use crate::{repository, AppState, Repository};
 
+mod serve_html;
+
+#[derive(Debug, Clone)]
+pub struct ServeHtmlConf {
+    prefix: String,
+    path: String,
+}
+
 impl AppState {
-    pub fn new(repo: Repository) -> Self {
-        Self { repository: repo }
+    pub fn new(repo: Repository, prefix: &str) -> Self {
+        Self {
+            repository: repo,
+            prefix: prefix.to_string(),
+        }
     }
 }
 
@@ -38,7 +50,7 @@ pub async fn register(
     app.repository
         .save_raw_password(user.id, &req.password)
         .await?;
-    Ok(Redirect::to("/login.html"))
+    Ok(Redirect::to(&format!("{}/login.html", &app.prefix)))
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -75,7 +87,7 @@ pub async fn login(
     )]
     .into_iter()
     .collect();
-    Ok((headers, Redirect::to("/me")))
+    Ok((headers, Redirect::to(&format!("{}/me", &app.prefix))))
 }
 
 pub async fn logout(
@@ -98,7 +110,7 @@ pub async fn logout(
     )]
     .into_iter()
     .collect();
-    Ok((headers, Redirect::to("/")))
+    Ok((headers, Redirect::to(&app.prefix)))
 }
 
 pub async fn me(
@@ -120,22 +132,26 @@ pub async fn me(
     } = user;
     let html = std::fs::read_to_string("./public/me.html")
         .with_context(|| "failed to read public/me.html")?
+        .replace("{{prefix}}", &app.prefix)
         .replace("{{display_id}}", &display_id)
         .replace("{{name}}", &name)
         .replace("{{id}}", &id.to_string());
     Ok(Html(html))
 }
 
-pub fn public_routes() -> Router<AppState> {
-    use tower_http::services::{Redirect, ServeFile};
+pub fn public_routes(prefix: &str) -> Router<AppState> {
+    use serve_html::serve_html;
+    use tower_http::services::Redirect;
+
+    let gen_route = |path| get(serve_html).with_state(ServeHtmlConf::new(prefix, path));
     Router::new()
         .route_service(
             "/",
-            Redirect::<Body>::permanent("/index.html".parse().unwrap()),
+            Redirect::<Body>::permanent(format!("{prefix}/index.html").parse().unwrap()),
         )
-        .route_service("/index.html", ServeFile::new("./public/index.html"))
-        .route_service("/login.html", ServeFile::new("./public/login.html"))
-        .route_service("/signup.html", ServeFile::new("./public/signup.html"))
+        .route("/index.html", gen_route("./public/index.html"))
+        .route("/login.html", gen_route("./public/login.html"))
+        .route("/signup.html", gen_route("./public/signup.html"))
 }
 
 pub fn api_routes() -> Router<AppState> {

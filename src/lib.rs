@@ -44,13 +44,15 @@ pub fn db_options_from_env(prefix: &str) -> anyhow::Result<mysql::MySqlConnectOp
 #[derive(Debug, Clone)]
 pub struct AppState {
     repository: Repository,
+    prefix: String,
 }
 
-pub fn make_router(state: AppState) -> axum::Router {
-    axum::Router::new()
-        .nest("/", app::public_routes())
+pub fn make_router(state: AppState, prefix: &str) -> axum::Router {
+    let inner = axum::Router::new()
+        .nest("/", app::public_routes(prefix))
         .route("/ping", axum::routing::get(|| async { "pong" }))
         .route("/me", axum::routing::get(app::me))
         .nest("/api", app::api_routes())
-        .with_state(state)
+        .with_state(state);
+    axum::Router::new().nest(prefix, inner)
 }
