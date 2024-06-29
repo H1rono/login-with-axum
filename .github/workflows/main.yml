@@ -13,6 +13,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: DeterminateSystems/nix-installer-action@v11
-      - uses: DeterminateSystems/magic-nix-cache-action@v6
-      - run: nix build
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo check
+      - run: cargo build
+      - run: cargo clippy -- -D warnings
+      - run: cargo fmt --all -- --check
