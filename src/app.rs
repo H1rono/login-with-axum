@@ -81,9 +81,12 @@ pub async fn login(
     let cookie_value = app.repository.create_session_for_user(user).await?;
     let headers: HeaderMap = [(
         SET_COOKIE,
-        format!("ax_session={cookie_value}; Path=/; HttpOnly")
-            .parse()
-            .with_context(|| "failed to set cookie to header value")?,
+        format!(
+            "ax_session={cookie_value}; Path={prefix}; HttpOnly",
+            prefix = &app.prefix
+        )
+        .parse()
+        .with_context(|| "failed to set cookie to header value")?,
     )]
     .into_iter()
     .collect();
@@ -104,9 +107,12 @@ pub async fn logout(
     // TODO: add attribute `Expires` with chrono
     let headers: HeaderMap = [(
         SET_COOKIE,
-        "ax_session=; Max-Age=-1; Path=/; HttpOnly"
-            .parse()
-            .with_context(|| "failed to set cookie header value")?,
+        format!(
+            "ax_session=; Max-Age=-1; Path={prefix}; HttpOnly",
+            prefix = &app.prefix
+        )
+        .parse()
+        .with_context(|| "failed to set cookie header value")?,
     )]
     .into_iter()
     .collect();
