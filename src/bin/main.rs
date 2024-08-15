@@ -28,6 +28,8 @@ async fn main() -> anyhow::Result<()> {
         .parse()?;
     let addr = std::net::SocketAddr::from(([0, 0, 0, 0], port));
     let listener = tokio::net::TcpListener::bind(addr).await?;
-    axum::serve(listener, app).await?;
+    axum::serve(listener, app)
+        .with_graceful_shutdown(lib::signal_handler())
+        .await?;
     Ok(())
 }

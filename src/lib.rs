@@ -56,3 +56,10 @@ pub fn make_router(state: AppState, prefix: &str) -> axum::Router {
         .with_state(state);
     axum::Router::new().nest(prefix, inner)
 }
+
+#[tracing::instrument]
+pub async fn signal_handler() {
+    if let Err(e) = tokio::signal::ctrl_c().await {
+        tracing::error!("{e}");
+    }
+}
