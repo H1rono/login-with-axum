@@ -1,0 +1,44 @@
+version: 2
+
+updates:
+  - package-ecosystem: cargo
+    directory: "/"
+    schedule:
+      interval: monthly
+      time: "00:00"
+      timezone: "Asia/Tokyo"
+    reviewers:
+      - H1rono
+    labels:
+      - "dependencies"
+    groups:
+      patch-dependencies:
+        dependency-type: development
+        applies-to: version-updates
+        update-types:
+          - patch
+      sqlx-dependencies:
+        dependency-type: development
+        applies-to: version-updates
+        patterns:
+          - "sqlx*"
+        update-types:
+          - minor
+      axum-dependencies:
+        dependency-type: development
+        applies-to: version-updates
+        patterns:
+          - "axum*"
+        update-types:
+          - minor
+
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: monthly
+      time: "00:00"
+      timezone: "Asia/Tokyo"
+    reviewers:
+      - H1rono
+    labels:
+      - "dependencies"
