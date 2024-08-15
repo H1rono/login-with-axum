@@ -26,8 +26,12 @@ services:
       retries: 5
 
   app:
-    build: .
-    image: login-with-axum
+    build:
+      context: ./..
+      dockerfile: ./docker/Dockerfile
+      tags:
+        - login-with-axum
+      target: debian-slim
     environment:
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-root}
       - MYSQL_USER=${MYSQL_USER:-db}

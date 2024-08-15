@@ -12,7 +12,7 @@ RUN --mount=type=cache,target=/var/cache/rustup,sharing=locked \
     cargo build --release --locked \
     && cp -r ./public /public
 
-FROM debian:bookworm-slim
+FROM debian:bookworm-slim AS debian-slim
 
 WORKDIR /app
 
