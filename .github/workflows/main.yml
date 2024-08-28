@@ -47,6 +47,6 @@ jobs:
           push: ${{ github.ref_name == 'main' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          platforms: linux/amd64
+          platforms: linux/arm64,linux/amd64,linux/ppc64le,linux/s390x
           cache-from: type=gha
           cache-to: type=gha
