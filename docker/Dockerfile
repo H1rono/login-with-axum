@@ -1,6 +1,6 @@
 FROM rust:bookworm AS builder
 
-WORKDIR /app
+WORKDIR /srv
 
 ENV CARGO_TARGET_DIR=/target \
     RUSTUP_HOME=/var/cache/rustup \
@@ -14,13 +14,13 @@ RUN --mount=type=cache,target=/var/cache/rustup,sharing=locked \
 
 FROM debian:bookworm-slim AS debian-slim
 
-WORKDIR /app
+WORKDIR /srv
 
 RUN --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
     apt-get -qq update \
     && apt-get install -qq --no-install-recommends libssl-dev
 
-COPY --from=builder /public /app/public
-COPY --from=builder /target/release/main /app/main
+COPY --from=builder /public /srv/public
+COPY --from=builder /target/release/main /srv/main
 
-CMD [ "/app/main" ]
+CMD [ "/srv/main" ]
