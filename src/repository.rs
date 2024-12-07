@@ -4,6 +4,7 @@ use uuid::Uuid;
 
 use crate::Repository;
 
+mod options;
 mod user_passwords;
 mod user_sessions;
 mod users;
@@ -14,8 +15,8 @@ pub type SessionStore = ();
 
 #[allow(unused)]
 impl Repository {
-    pub async fn connect_with(options: mysql::MySqlConnectOptions) -> sqlx::Result<Self> {
-        let pool = mysql::MySqlPool::connect_with(options).await?;
+    pub async fn connect_with(options: ConnectOptions) -> sqlx::Result<Self> {
+        let pool = mysql::MySqlPool::connect_with(options.into()).await?;
         // let session_store =
         //     MySqlSessionStore::from_client(pool.clone()).with_table_name("user_sessions");
         let session_store = ();
@@ -53,4 +54,14 @@ pub struct UserPassword {
     #[sqlx(rename = "user_id")]
     pub id: UserId,
     pub psk: String,
+}
+
+#[must_use]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Deserialize, Serialize)]
+pub struct ConnectOptions {
+    hostname: String,
+    port: u16,
+    username: String,
+    password: String,
+    database: String,
 }

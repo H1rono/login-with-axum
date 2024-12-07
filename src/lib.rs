@@ -17,7 +17,7 @@ pub struct Repository {
     bcrypt_cost: u32,
 }
 
-pub fn db_options_from_env(prefix: &str) -> anyhow::Result<mysql::MySqlConnectOptions> {
+pub fn conn_options_from_env(prefix: &str) -> anyhow::Result<repository::ConnectOptions> {
     let var = |suffix| {
         let var_name = format!("{prefix}{suffix}");
         env::var(&var_name).with_context(|| format!("failed to get env-var {var_name}"))
@@ -30,12 +30,13 @@ pub fn db_options_from_env(prefix: &str) -> anyhow::Result<mysql::MySqlConnectOp
     let user = var("USER")?;
     let password = var("PASSWORD")?;
     let database = var("DATABASE")?;
-    let options = mysql::MySqlConnectOptions::new()
-        .host(&hostname)
+    let options = repository::ConnectOptions::builder()
+        .hostname(&hostname)
         .port(port)
         .username(&user)
         .password(&password)
-        .database(&database);
+        .database(&database)
+        .build()?;
     Ok(options)
 }
 

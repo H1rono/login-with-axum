@@ -8,9 +8,9 @@ async fn main() -> anyhow::Result<()> {
     tracing_subscriber::fmt()
         .with_env_filter(EnvFilter::try_from_default_env().unwrap_or("info".into()))
         .init();
-    let options = lib::db_options_from_env("MYSQL_")
-        .or_else(|_| lib::db_options_from_env("MARIADB_"))
-        .or_else(|_| lib::db_options_from_env("NS_MARIADB_"))?;
+    let options = lib::conn_options_from_env("MYSQL_")
+        .or_else(|_| lib::conn_options_from_env("MARIADB_"))
+        .or_else(|_| lib::conn_options_from_env("NS_MARIADB_"))?;
     let repo = lib::Repository::connect_with(options).await?;
     repo.migrate().await?;
     let prefix = {
