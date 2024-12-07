@@ -1,7 +1,6 @@
 use std::env;
 
 use anyhow::Context;
-use async_sqlx_session::MySqlSessionStore;
 use sqlx::mysql;
 
 mod app;
@@ -14,7 +13,7 @@ pub use error::{Error, Result};
 #[derive(Debug, Clone)]
 pub struct Repository {
     pool: mysql::MySqlPool,
-    session_store: MySqlSessionStore,
+    session_store: repository::SessionStore,
     bcrypt_cost: u32,
 }
 

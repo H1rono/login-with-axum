@@ -16,7 +16,6 @@ tokio = { version = "1.41", features = [ "rt", "macros", "signal", "time" ] }
 tower-http = { version = "0.5", features = [ "trace", "fs", "redirect" ] }
 axum = "0.7"
 axum-extra = { version = "0.9", features = [ "typed-header" ] }
-async-session = "3.0"
 thiserror = "2.0"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
@@ -24,12 +23,6 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 [dependencies.sqlx]
 version = "0.7"
 features = ["runtime-tokio", "tls-native-tls", "mysql", "chrono", "uuid"]
-
-[dependencies.async-sqlx-session]
-git = "https://github.com/maxcountryman/async-sqlx-session.git"
-default-features = false
-branch = "sqlx-0.7"
-features = ["mysql"]
 
 [lints.clippy]
 

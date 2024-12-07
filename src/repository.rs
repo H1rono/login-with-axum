@@ -1,4 +1,3 @@
-use async_sqlx_session::MySqlSessionStore;
 use serde::{Deserialize, Serialize};
 use sqlx::{mysql, FromRow};
 use uuid::Uuid;
@@ -11,12 +10,15 @@ mod users;
 
 const MIGRATOR: sqlx::migrate::Migrator = sqlx::migrate!("./migrations");
 
+pub type SessionStore = ();
+
 #[allow(unused)]
 impl Repository {
     pub async fn connect_with(options: mysql::MySqlConnectOptions) -> sqlx::Result<Self> {
         let pool = mysql::MySqlPool::connect_with(options).await?;
-        let session_store =
-            MySqlSessionStore::from_client(pool.clone()).with_table_name("user_sessions");
+        // let session_store =
+        //     MySqlSessionStore::from_client(pool.clone()).with_table_name("user_sessions");
+        let session_store = ();
         Ok(Self {
             pool,
             session_store,
@@ -26,7 +28,7 @@ impl Repository {
 
     pub async fn migrate(&self) -> sqlx::Result<()> {
         MIGRATOR.run(&self.pool).await?;
-        self.session_store.migrate().await?;
+        // self.session_store.migrate().await?;
         Ok(())
     }
 }
