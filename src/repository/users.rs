@@ -33,7 +33,7 @@ impl fmt::Display for UserId {
 
 impl<'a> Decode<'a, MySql> for UserId {
     fn decode(
-        value: <MySql as sqlx::database::HasValueRef<'a>>::ValueRef,
+        value: <MySql as sqlx::Database>::ValueRef<'a>,
     ) -> Result<Self, sqlx::error::BoxDynError> {
         <Uuid as Decode<'a, MySql>>::decode(value).map(UserId)
     }
@@ -42,19 +42,9 @@ impl<'a> Decode<'a, MySql> for UserId {
 impl<'a> Encode<'a, MySql> for UserId {
     fn encode_by_ref(
         &self,
-        buf: &mut <MySql as sqlx::database::HasArguments<'a>>::ArgumentBuffer,
-    ) -> sqlx::encode::IsNull {
+        buf: &mut <MySql as sqlx::Database>::ArgumentBuffer<'a>,
+    ) -> Result<sqlx::encode::IsNull, sqlx::error::BoxDynError> {
         self.0.encode_by_ref(buf)
-    }
-
-    fn encode(
-        self,
-        buf: &mut <MySql as sqlx::database::HasArguments<'a>>::ArgumentBuffer,
-    ) -> sqlx::encode::IsNull
-    where
-        Self: Sized,
-    {
-        self.0.encode(buf)
     }
 }
 
