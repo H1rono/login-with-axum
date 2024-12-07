@@ -24,6 +24,15 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 version = "0.8"
 features = ["runtime-tokio", "tls-native-tls", "mysql", "chrono", "uuid"]
 
+[dependencies.tower-sessions]
+version = "0.13"
+default-features = false
+features = ["axum-core"]
+
+[dependencies.tower-sessions-sqlx-store]
+version = "0.14"
+features = ["mysql"]
+
 [lints.clippy]
 
 pedantic.level = "deny"
