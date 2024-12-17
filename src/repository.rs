@@ -1,7 +1,6 @@
 use serde::{Deserialize, Serialize};
-use sqlx::{mysql, FromRow};
+use sqlx::mysql;
 
-use crate::model::UserId;
 use crate::Repository;
 
 mod options;
@@ -32,15 +31,6 @@ impl Repository {
         // self.session_store.migrate().await?;
         Ok(())
     }
-}
-
-#[must_use]
-#[derive(Debug, Clone, Deserialize, Serialize, FromRow)]
-pub struct UserPassword {
-    #[serde(rename = "user_id")]
-    #[sqlx(rename = "user_id")]
-    pub id: UserId,
-    pub psk: String,
 }
 
 #[must_use]

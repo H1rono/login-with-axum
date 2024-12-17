@@ -15,3 +15,9 @@ pub struct User {
     pub display_id: String,
     pub name: String,
 }
+
+/// hashed
+#[must_use]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Deserialize, Serialize)]
+#[serde(transparent)]
+pub struct UserPassword(pub String);

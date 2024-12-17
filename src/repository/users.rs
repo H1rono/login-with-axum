@@ -7,7 +7,7 @@ use crate::Repository;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Type)]
 #[sqlx(transparent)]
-struct DbUserId(Uuid);
+pub(super) struct DbUserId(pub(super) Uuid);
 
 impl From<UserId> for DbUserId {
     fn from(value: UserId) -> Self {
@@ -22,10 +22,10 @@ impl From<DbUserId> for UserId {
 }
 
 #[derive(Debug, Clone, FromRow)]
-struct DbUser {
-    id: DbUserId,
-    display_id: String,
-    name: String,
+pub(super) struct DbUser {
+    pub(super) id: DbUserId,
+    pub(super) display_id: String,
+    pub(super) name: String,
 }
 
 impl From<DbUser> for User {
