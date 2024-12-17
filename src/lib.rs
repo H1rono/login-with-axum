@@ -5,6 +5,7 @@ use sqlx::mysql;
 
 mod app;
 mod error;
+mod model;
 mod repository;
 
 pub use error::{Error, Result};

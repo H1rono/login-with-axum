@@ -1,4 +1,4 @@
-use super::User;
+use crate::model::User;
 use crate::Repository;
 
 #[allow(unused, clippy::unused_async)]

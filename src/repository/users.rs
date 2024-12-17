@@ -1,33 +1,45 @@
-use std::fmt;
-
 use anyhow::anyhow;
-use sqlx::{query, query_as, Decode, Encode, MySql, Type};
+use sqlx::{query, query_as, Decode, Encode, FromRow, MySql, Type};
 use uuid::Uuid;
 
-use super::{User, UserId};
+use crate::model::{User, UserId};
 use crate::Repository;
 
-impl UserId {
-    pub fn new(inner: Uuid) -> Self {
-        Self(inner)
-    }
-}
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Type)]
+#[sqlx(transparent)]
+struct DbUserId(Uuid);
 
-impl From<Uuid> for UserId {
-    fn from(value: Uuid) -> Self {
-        Self(value)
-    }
-}
-
-impl From<UserId> for Uuid {
+impl From<UserId> for DbUserId {
     fn from(value: UserId) -> Self {
-        value.0
+        Self(value.0)
     }
 }
 
-impl fmt::Display for UserId {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.0)
+impl From<DbUserId> for UserId {
+    fn from(value: DbUserId) -> Self {
+        Self(value.0)
+    }
+}
+
+#[derive(Debug, Clone, FromRow)]
+struct DbUser {
+    id: DbUserId,
+    display_id: String,
+    name: String,
+}
+
+impl From<DbUser> for User {
+    fn from(value: DbUser) -> Self {
+        let DbUser {
+            id,
+            display_id,
+            name,
+        } = value;
+        Self {
+            id: id.into(),
+            display_id,
+            name,
+        }
     }
 }
 
@@ -61,23 +73,30 @@ impl Type<MySql> for UserId {
 #[allow(unused)]
 impl Repository {
     pub async fn get_users(&self) -> sqlx::Result<Vec<User>> {
-        query_as("SELECT * FROM `users`")
+        let users = query_as("SELECT * FROM `users`")
             .fetch_all(&self.pool)
-            .await
+            .await?;
+        let users = users.into_iter().map(|u: DbUser| u.into()).collect();
+        Ok(users)
     }
 
     pub async fn get_user_by_id(&self, id: UserId) -> sqlx::Result<Option<User>> {
-        query_as("SELECT * FROM `users` WHERE `id` = ?")
+        let id = DbUserId::from(id);
+        let user: Option<DbUser> = query_as("SELECT * FROM `users` WHERE `id` = ?")
             .bind(id)
             .fetch_optional(&self.pool)
-            .await
+            .await?;
+        let user = user.map(User::from);
+        Ok(user)
     }
 
     pub async fn get_user_by_display_id(&self, display_id: &str) -> sqlx::Result<Option<User>> {
-        query_as("SELECT * FROM `users` WHERE `display_id` = ?")
+        let user: Option<DbUser> = query_as("SELECT * FROM `users` WHERE `display_id` = ?")
             .bind(display_id)
             .fetch_optional(&self.pool)
-            .await
+            .await?;
+        let user = user.map(User::from);
+        Ok(user)
     }
 
     pub async fn create_user(&self, user: User) -> anyhow::Result<()> {

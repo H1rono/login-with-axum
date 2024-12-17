@@ -9,7 +9,8 @@ use axum_extra::{headers::Cookie, TypedHeader};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::{repository, AppState, Repository};
+use crate::model::User;
+use crate::{AppState, Repository};
 
 mod serve_html;
 
@@ -41,7 +42,7 @@ pub async fn register(
 ) -> crate::Result<Redirect> {
     // TODO: validation
     let id = Uuid::new_v4();
-    let user = repository::User {
+    let user = User {
         id: id.into(),
         display_id: req.display_id,
         name: req.name,
@@ -131,7 +132,7 @@ pub async fn me(
         .load_session_from_cookie(session_cookie)
         .await?
         .ok_or_else(|| anyhow!("user not found"))?;
-    let repository::User {
+    let User {
         id,
         display_id,
         name,
