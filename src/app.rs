@@ -52,7 +52,7 @@ pub async fn register(
     app.repository
         .save_raw_password(user.id, &req.password)
         .await?;
-    Ok(Redirect::to(&format!("{}/login.html", &app.prefix)))
+    Ok(Redirect::to(&format!("{}login.html", &app.prefix)))
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -95,7 +95,7 @@ pub async fn login(
     )]
     .into_iter()
     .collect();
-    Ok((headers, Redirect::to(&format!("{}/me", &app.prefix))))
+    Ok((headers, Redirect::to(&format!("{}me", &app.prefix))))
 }
 
 pub async fn logout(
@@ -159,7 +159,7 @@ pub fn public_routes(prefix: &str) -> Router<AppState> {
     Router::new()
         .route_service(
             "/",
-            Redirect::<Body>::permanent(format!("{prefix}/index.html").parse().unwrap()),
+            Redirect::<Body>::permanent(format!("{prefix}index.html").parse().unwrap()),
         )
         .route("/index.html", gen_route("./public/index.html"))
         .route("/login.html", gen_route("./public/login.html"))

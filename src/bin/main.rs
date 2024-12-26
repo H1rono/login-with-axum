@@ -28,10 +28,15 @@ async fn main() -> anyhow::Result<()> {
         .build();
     let prefix = {
         let p = std::env::var("PREFIX").unwrap_or_default();
-        if p.starts_with('/') {
+        let p = if p.starts_with('/') {
             p
         } else {
             format!("/{p}")
+        };
+        if p.ends_with('/') {
+            p
+        } else {
+            format!("{p}/")
         }
     };
     let app_state = lib::AppState::new(repo, token_manager, &prefix);
