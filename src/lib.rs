@@ -44,9 +44,10 @@ pub fn conn_options_from_env(prefix: &str) -> anyhow::Result<repository::Connect
 }
 
 #[must_use]
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct AppState {
     repository: Repository,
+    token_manager: TokenManager,
     prefix: String,
 }
 

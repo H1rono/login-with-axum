@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::model::User;
-use crate::{AppState, Repository};
+use crate::{AppState, Repository, TokenManager};
 
 mod serve_html;
 
@@ -21,9 +21,10 @@ pub struct ServeHtmlConf {
 }
 
 impl AppState {
-    pub fn new(repo: Repository, prefix: &str) -> Self {
+    pub fn new(repo: Repository, tm: TokenManager, prefix: &str) -> Self {
         Self {
             repository: repo,
+            token_manager: tm,
             prefix: prefix.to_string(),
         }
     }
@@ -79,7 +80,10 @@ pub async fn login(
     if !verification {
         return Err(anyhow!("Unauthorized").into());
     }
-    let cookie_value = app.repository.create_session_for_user(user).await?;
+    let cookie_value = app
+        .token_manager
+        .encode(user.id)
+        .with_context(|| "encoding to JWT failed")?;
     let headers: HeaderMap = [(
         SET_COOKIE,
         format!(
@@ -98,13 +102,10 @@ pub async fn logout(
     State(app): State<AppState>,
     TypedHeader(cookie): TypedHeader<Cookie>,
 ) -> crate::Result<(HeaderMap, Redirect)> {
-    let session_cookie = cookie
+    let _session_cookie = cookie
         .get("ax_session")
         .ok_or_else(|| anyhow!("Unauthorized"))?;
-    app.repository
-        .destroy_session_for_cookie(session_cookie)
-        .await?
-        .ok_or_else(|| anyhow!("no matching sessoin found"))?;
+    // TODO Expire within TokenManager
     // TODO: add attribute `Expires` with chrono
     let headers: HeaderMap = [(
         SET_COOKIE,
@@ -127,16 +128,20 @@ pub async fn me(
     let session_cookie = cookie
         .get("ax_session")
         .ok_or_else(|| anyhow!("Unauthorized"))?;
-    let user = app
-        .repository
-        .load_session_from_cookie(session_cookie)
-        .await?
-        .ok_or_else(|| anyhow!("user not found"))?;
+    let user_id = app
+        .token_manager
+        .decode(session_cookie)
+        .with_context(|| "failed to parse cookie value")?;
     let User {
         id,
         display_id,
         name,
-    } = user;
+    } = app
+        .repository
+        .get_user_by_id(user_id)
+        .await
+        .with_context(|| "failed to get user by id")?
+        .with_context(|| "user not found")?;
     let html = std::fs::read_to_string("./public/me.html")
         .with_context(|| "failed to read public/me.html")?
         .replace("{{prefix}}", &app.prefix)
