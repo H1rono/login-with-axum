@@ -7,6 +7,7 @@ mod app;
 mod error;
 mod model;
 mod repository;
+mod token;
 
 pub use error::{Error, Result};
 
@@ -16,6 +17,8 @@ pub struct Repository {
     pool: mysql::MySqlPool,
     bcrypt_cost: u32,
 }
+
+pub use token::Manager as TokenManager;
 
 pub fn conn_options_from_env(prefix: &str) -> anyhow::Result<repository::ConnectOptions> {
     let var = |suffix| {
