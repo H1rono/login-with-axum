@@ -14,7 +14,6 @@ pub use error::{Error, Result};
 #[derive(Debug, Clone)]
 pub struct Repository {
     pool: mysql::MySqlPool,
-    session_store: repository::SessionStore,
     bcrypt_cost: u32,
 }
 

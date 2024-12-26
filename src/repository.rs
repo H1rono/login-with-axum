@@ -10,18 +10,12 @@ mod users;
 
 const MIGRATOR: sqlx::migrate::Migrator = sqlx::migrate!("./migrations");
 
-pub type SessionStore = ();
-
 #[allow(unused)]
 impl Repository {
     pub async fn connect_with(options: ConnectOptions) -> sqlx::Result<Self> {
         let pool = mysql::MySqlPool::connect_with(options.into()).await?;
-        // let session_store =
-        //     MySqlSessionStore::from_client(pool.clone()).with_table_name("user_sessions");
-        let session_store = ();
         Ok(Self {
             pool,
-            session_store,
             bcrypt_cost: bcrypt::DEFAULT_COST,
         })
     }
