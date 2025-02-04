@@ -15,8 +15,8 @@ uuid = { version = "1.12", features = [ "v4", "serde" ] }
 jsonwebtoken = { version = "9.3", default-features = false }
 tokio = { version = "1.43", features = [ "rt", "macros", "signal", "time" ] }
 tower-http = { version = "0.6", features = [ "trace", "fs", "redirect" ] }
-axum = "0.7"
-axum-extra = { version = "0.9", features = [ "typed-header" ] }
+axum = "0.8"
+axum-extra = { version = "0.10", features = [ "typed-header" ] }
 thiserror = "2.0"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
