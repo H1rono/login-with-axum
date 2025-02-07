@@ -5,7 +5,6 @@ use crate::Repository;
 
 mod options;
 mod user_passwords;
-mod user_sessions;
 mod users;
 
 const MIGRATOR: sqlx::migrate::Migrator = sqlx::migrate!("./migrations");
