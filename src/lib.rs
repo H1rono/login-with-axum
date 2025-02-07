@@ -39,7 +39,7 @@ pub fn conn_options_from_env(prefix: &str) -> anyhow::Result<repository::Connect
         .username(&user)
         .password(&password)
         .database(&database)
-        .build()?;
+        .build();
     Ok(options)
 }
 

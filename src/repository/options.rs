@@ -1,12 +1,22 @@
-use serde::{Deserialize, Serialize};
+#[derive(Debug, Clone)]
+pub struct Builder<Hostname = (), Port = (), Username = (), Password = (), Database = ()> {
+    hostname: Hostname,
+    port: Port,
+    username: Username,
+    password: Password,
+    database: Database,
+}
 
-#[derive(Debug, Clone, Default, PartialEq, Eq, Hash, Deserialize, Serialize)]
-pub struct Builder {
-    hostname: Option<String>,
-    port: Option<u16>,
-    username: Option<String>,
-    password: Option<String>,
-    database: Option<String>,
+impl Default for Builder {
+    fn default() -> Self {
+        Self {
+            hostname: (),
+            port: (),
+            username: (),
+            password: (),
+            database: (),
+        }
+    }
 }
 
 impl super::ConnectOptions {
@@ -19,48 +29,113 @@ impl Builder {
     pub fn new() -> Self {
         Self::default()
     }
+}
 
-    pub fn hostname(self, value: &str) -> Self {
-        let hostname = Some(value.to_string());
-        Self { hostname, ..self }
+impl<Hostname, Port, Username, Password, Database>
+    Builder<Hostname, Port, Username, Password, Database>
+{
+    pub fn hostname(self, value: &str) -> Builder<String, Port, Username, Password, Database> {
+        let Self {
+            hostname: _,
+            port,
+            username,
+            password,
+            database,
+        } = self;
+        Builder {
+            hostname: value.to_string(),
+            port,
+            username,
+            password,
+            database,
+        }
     }
 
-    pub fn port(self, value: u16) -> Self {
-        let port = Some(value);
-        Self { port, ..self }
+    pub fn port(self, value: u16) -> Builder<Hostname, u16, Username, Password, Database> {
+        let Self {
+            hostname,
+            port: _,
+            username,
+            password,
+            database,
+        } = self;
+        Builder {
+            hostname,
+            port: value,
+            username,
+            password,
+            database,
+        }
     }
 
-    pub fn username(self, value: &str) -> Self {
-        let username = Some(value.to_string());
-        Self { username, ..self }
+    pub fn username(self, value: &str) -> Builder<Hostname, Port, String, Password, Database> {
+        let Self {
+            hostname,
+            port,
+            username: _,
+            password,
+            database,
+        } = self;
+        Builder {
+            hostname,
+            port,
+            username: value.to_string(),
+            password,
+            database,
+        }
     }
 
-    pub fn password(self, value: &str) -> Self {
-        let password = Some(value.to_string());
-        Self { password, ..self }
+    pub fn password(self, value: &str) -> Builder<Hostname, Port, Username, String, Database> {
+        let Self {
+            hostname,
+            port,
+            username,
+            password: _,
+            database,
+        } = self;
+        Builder {
+            hostname,
+            port,
+            username,
+            password: value.to_string(),
+            database,
+        }
     }
 
-    pub fn database(self, value: &str) -> Self {
-        let database = Some(value.to_string());
-        Self { database, ..self }
+    pub fn database(self, value: &str) -> Builder<Hostname, Port, Username, Password, String> {
+        let Self {
+            hostname,
+            port,
+            username,
+            password,
+            database: _,
+        } = self;
+        Builder {
+            hostname,
+            port,
+            username,
+            password,
+            database: value.to_string(),
+        }
     }
+}
 
-    pub fn build(self) -> anyhow::Result<super::ConnectOptions> {
-        use anyhow::Context;
-
-        let hostname = self.hostname.context("hostname is not set")?;
-        let port = self.port.context("port is not set")?;
-        let username = self.username.context("username is not set")?;
-        let password = self.password.context("password is not set")?;
-        let database = self.database.context("database is not set")?;
-        let opts = super::ConnectOptions {
+impl Builder<String, u16, String, String, String> {
+    pub fn build(self) -> super::ConnectOptions {
+        let Self {
             hostname,
             port,
             username,
             password,
             database,
-        };
-        Ok(opts)
+        } = self;
+        super::ConnectOptions {
+            hostname,
+            port,
+            username,
+            password,
+            database,
+        }
     }
 }
 
