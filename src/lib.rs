@@ -51,14 +51,15 @@ pub struct AppState {
     prefix: String,
 }
 
-pub fn make_router(state: AppState, prefix: &str) -> axum::Router {
+pub fn make_router(state: AppState) -> axum::Router {
     let inner = axum::Router::new()
-        .nest("/", router::public_routes(prefix))
+        .nest("/", router::public_routes(&state.prefix))
         .route("/ping", axum::routing::get(|| async { "pong" }))
         .route("/me", axum::routing::get(router::me))
-        .nest("/api", router::api_routes())
-        .with_state(state);
-    axum::Router::new().nest(prefix, inner)
+        .nest("/api", router::api_routes());
+    axum::Router::new()
+        .nest(&state.prefix, inner)
+        .with_state(state)
 }
 
 #[tracing::instrument]

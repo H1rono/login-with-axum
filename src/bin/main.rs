@@ -40,7 +40,7 @@ async fn main() -> anyhow::Result<()> {
         }
     };
     let app_state = lib::AppState::new(repo, token_manager, &prefix);
-    let app = lib::make_router(app_state, &prefix).layer(TraceLayer::new_for_http());
+    let app = lib::make_router(app_state).layer(TraceLayer::new_for_http());
     let port: u16 = std::env::var("PORT")
         .unwrap_or_else(|_| "4176".to_string())
         .parse()?;
