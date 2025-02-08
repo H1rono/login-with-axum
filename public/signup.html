@@ -3,11 +3,12 @@
 
 <head>
     <title>Sign Up</title>
+    <script defer type="module" src="./scripts/signup.js"></script>
 </head>
 
 <body>
     <h1>Sign Up</h1>
-    <form action="{{prefix}}api/register" method="POST">
+    <form id="signup-form" action="./api/register" method="POST">
         <div>
             <label for="display_id">Your ID</label>
             <input name="display_id" id="display_id" type="text" value="" />

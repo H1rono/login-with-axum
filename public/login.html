@@ -3,11 +3,12 @@
 
 <head>
     <title>Login</title>
+    <script defer type="module" src="./scripts/login.js"></script>
 </head>
 
 <body>
     <h1>Login</h1>
-    <form action="{{prefix}}api/login" method="POST">
+    <form id="login-form" action="./api/login" method="POST">
         <div>
             <label for="display_id">Your ID</label>
             <input name="display_id" id="display_id" type="text" value="" />
