@@ -1,11 +1,10 @@
 use anyhow::{anyhow, Context};
 use axum::body::Body;
 use axum::extract::{Form, State};
-use axum::http::{header::SET_COOKIE, HeaderMap};
 use axum::response::{Html, Redirect};
 use axum::routing::get;
 use axum::Router;
-use axum_extra::{headers::Cookie, TypedHeader};
+use axum_extra::extract::cookie;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -63,8 +62,9 @@ pub struct LoginUserRequest {
 
 pub async fn login(
     State(app): State<AppState>,
+    cookie_jar: cookie::CookieJar,
     Form(req): Form<LoginUserRequest>,
-) -> crate::Result<(HeaderMap, Redirect)> {
+) -> crate::Result<(cookie::CookieJar, Redirect)> {
     let user = app
         .repository
         .get_user_by_display_id(&req.display_id)
@@ -84,50 +84,40 @@ pub async fn login(
         .token_manager
         .encode(user.id)
         .with_context(|| "encoding to JWT failed")?;
-    let headers: HeaderMap = [(
-        SET_COOKIE,
-        format!(
-            "ax_session={cookie_value}; Path={prefix}; HttpOnly",
-            prefix = &app.prefix
-        )
-        .parse()
-        .with_context(|| "failed to set cookie to header value")?,
-    )]
-    .into_iter()
-    .collect();
-    Ok((headers, Redirect::to(&format!("{}me", &app.prefix))))
+    let cookie = cookie::Cookie::build(("ax_session", cookie_value))
+        .path(app.prefix.clone())
+        .http_only(true)
+        .build();
+    let cookie_jar = cookie_jar.add(cookie);
+    Ok((cookie_jar, Redirect::to(&format!("{}me", app.prefix))))
 }
 
 pub async fn logout(
     State(app): State<AppState>,
-    TypedHeader(cookie): TypedHeader<Cookie>,
-) -> crate::Result<(HeaderMap, Redirect)> {
-    let _session_cookie = cookie
+    cookie_jar: cookie::CookieJar,
+) -> crate::Result<(cookie::CookieJar, Redirect)> {
+    let _cookie = cookie_jar
         .get("ax_session")
         .ok_or_else(|| anyhow!("Unauthorized"))?;
     // TODO Expire within TokenManager
     // TODO: add attribute `Expires` with chrono
-    let headers: HeaderMap = [(
-        SET_COOKIE,
-        format!(
-            "ax_session=; Max-Age=-1; Path={prefix}; HttpOnly",
-            prefix = &app.prefix
-        )
-        .parse()
-        .with_context(|| "failed to set cookie header value")?,
-    )]
-    .into_iter()
-    .collect();
-    Ok((headers, Redirect::to(&app.prefix)))
+    let cookie = cookie::Cookie::build("ax_session")
+        .removal()
+        .path(app.prefix.clone())
+        .http_only(true)
+        .build();
+    let cookie_jar = cookie_jar.add(cookie);
+    Ok((cookie_jar, Redirect::to(&app.prefix)))
 }
 
 pub async fn me(
     State(app): State<AppState>,
-    TypedHeader(cookie): TypedHeader<Cookie>,
+    cookie_jar: cookie::CookieJar,
 ) -> crate::Result<Html<String>> {
-    let session_cookie = cookie
+    let session_cookie = cookie_jar
         .get("ax_session")
-        .ok_or_else(|| anyhow!("Unauthorized"))?;
+        .context("Unauthenticated")?
+        .value();
     let user_id = app
         .token_manager
         .decode(session_cookie)
