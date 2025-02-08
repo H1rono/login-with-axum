@@ -1,23 +1,13 @@
 use anyhow::{anyhow, Context};
-use axum::body::Body;
 use axum::extract::{Form, State};
-use axum::response::{Html, Redirect};
-use axum::routing::get;
-use axum::Router;
+use axum::response::Redirect;
+use axum::{Json, Router};
 use axum_extra::extract::cookie;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::model::User;
 use crate::{AppState, Repository, TokenManager};
-
-mod serve_html;
-
-#[derive(Debug, Clone)]
-pub struct ServeHtmlConf {
-    prefix: String,
-    path: String,
-}
 
 impl AppState {
     pub fn new(repo: Repository, tm: TokenManager, prefix: &str) -> Self {
@@ -89,7 +79,7 @@ pub async fn login(
         .http_only(true)
         .build();
     let cookie_jar = cookie_jar.add(cookie);
-    Ok((cookie_jar, Redirect::to(&format!("{}me", app.prefix))))
+    Ok((cookie_jar, Redirect::to(&format!("{}me.html", app.prefix))))
 }
 
 pub async fn logout(
@@ -113,7 +103,7 @@ pub async fn logout(
 pub async fn me(
     State(app): State<AppState>,
     cookie_jar: cookie::CookieJar,
-) -> crate::Result<Html<String>> {
+) -> crate::Result<Json<User>> {
     let session_cookie = cookie_jar
         .get("ax_session")
         .context("Unauthenticated")?
@@ -122,44 +112,20 @@ pub async fn me(
         .token_manager
         .decode(session_cookie)
         .with_context(|| "failed to parse cookie value")?;
-    let User {
-        id,
-        display_id,
-        name,
-    } = app
+    let user = app
         .repository
         .get_user_by_id(user_id)
         .await
         .with_context(|| "failed to get user by id")?
         .with_context(|| "user not found")?;
-    let html = std::fs::read_to_string("./public/me.html")
-        .with_context(|| "failed to read public/me.html")?
-        .replace("{{prefix}}", &app.prefix)
-        .replace("{{display_id}}", &display_id)
-        .replace("{{name}}", &name)
-        .replace("{{id}}", &id.to_string());
-    Ok(Html(html))
-}
-
-pub fn public_routes(prefix: &str) -> Router<AppState> {
-    use serve_html::serve_html;
-    use tower_http::services::Redirect;
-
-    let gen_route = |path| get(serve_html).with_state(ServeHtmlConf::new(prefix, path));
-    Router::new()
-        .route_service(
-            "/",
-            Redirect::<Body>::temporary(format!("{prefix}index.html").parse().unwrap()),
-        )
-        .route("/index.html", gen_route("./public/index.html"))
-        .route("/login.html", gen_route("./public/login.html"))
-        .route("/signup.html", gen_route("./public/signup.html"))
+    Ok(Json(user))
 }
 
 pub fn api_routes() -> Router<AppState> {
-    use axum::routing::post;
+    use axum::routing::{get, post};
     Router::new()
         .route("/register", post(register))
         .route("/login", post(login))
         .route("/logout", post(logout))
+        .route("/me", get(me))
 }

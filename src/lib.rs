@@ -44,10 +44,11 @@ pub struct AppState {
 }
 
 pub fn make_router(state: AppState) -> axum::Router {
-    let inner = router::public_routes(&state.prefix)
+    use tower_http::services::ServeDir;
+    let inner = axum::Router::new()
         .route("/ping", axum::routing::get(|| async { "pong" }))
-        .route("/me", axum::routing::get(router::me))
-        .nest("/api", router::api_routes());
+        .nest("/api", router::api_routes())
+        .fallback_service(ServeDir::new("./public"));
     let router = if &state.prefix == "/" {
         inner
     } else {
