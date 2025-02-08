@@ -52,14 +52,16 @@ pub struct AppState {
 }
 
 pub fn make_router(state: AppState) -> axum::Router {
-    let inner = axum::Router::new()
-        .nest("/", router::public_routes(&state.prefix))
+    let inner = router::public_routes(&state.prefix)
         .route("/ping", axum::routing::get(|| async { "pong" }))
         .route("/me", axum::routing::get(router::me))
         .nest("/api", router::api_routes());
-    axum::Router::new()
-        .nest(&state.prefix, inner)
-        .with_state(state)
+    let router = if &state.prefix == "/" {
+        inner
+    } else {
+        axum::Router::new().nest(&state.prefix, inner)
+    };
+    router.with_state(state)
 }
 
 #[tracing::instrument]
