@@ -159,7 +159,7 @@ pub fn public_routes(prefix: &str) -> Router<AppState> {
     Router::new()
         .route_service(
             "/",
-            Redirect::<Body>::permanent(format!("{prefix}index.html").parse().unwrap()),
+            Redirect::<Body>::temporary(format!("{prefix}index.html").parse().unwrap()),
         )
         .route("/index.html", gen_route("./public/index.html"))
         .route("/login.html", gen_route("./public/login.html"))
