@@ -2,14 +2,15 @@
 <html>
 
 <head>
-    <title>Hello, {{display_id}}!</title>
+    <title>Hello!</title>
+    <script defer async type="module" src="./scripts/me.js"></script>
 </head>
 
 <body>
-    <h1>Hello, {{name}}!</h1>
-    <p>Your id is "{{id}}".</p>
+    <h1>Hello <span class="field-name"></span>!</h1>
+    <p>Your id is "<span class="field-id"></span>".</p>
     <hr>
-    <form action="{{prefix}}api/logout" method="POST">
+    <form id="logout-form" action="./api/logout" method="POST">
         <button>logout</button>
     </form>
 </body>
