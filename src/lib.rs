@@ -10,6 +10,7 @@ mod token;
 
 pub use error::{Error, Result};
 pub use repository::Repository;
+pub use router::{make as make_router, AppState};
 pub use token::Manager as TokenManager;
 
 pub fn conn_options_from_env(prefix: &str) -> anyhow::Result<repository::ConnectOptions> {
@@ -33,28 +34,6 @@ pub fn conn_options_from_env(prefix: &str) -> anyhow::Result<repository::Connect
         .database(&database)
         .build();
     Ok(options)
-}
-
-#[must_use]
-#[derive(Clone)]
-pub struct AppState {
-    repository: Repository,
-    token_manager: TokenManager,
-    prefix: String,
-}
-
-pub fn make_router(state: AppState) -> axum::Router {
-    use tower_http::services::ServeDir;
-    let inner = axum::Router::new()
-        .route("/ping", axum::routing::get(|| async { "pong" }))
-        .nest("/api", router::api_routes())
-        .fallback_service(ServeDir::new("./public"));
-    let router = if &state.prefix == "/" {
-        inner
-    } else {
-        axum::Router::new().nest(&state.prefix, inner)
-    };
-    router.with_state(state)
 }
 
 #[tracing::instrument]

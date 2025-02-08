@@ -7,7 +7,15 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::model::User;
-use crate::{AppState, Repository, TokenManager};
+use crate::{Repository, TokenManager};
+
+#[must_use]
+#[derive(Clone)]
+pub struct AppState {
+    repository: Repository,
+    token_manager: TokenManager,
+    prefix: String,
+}
 
 impl AppState {
     pub fn new(repo: Repository, tm: TokenManager, prefix: &str) -> Self {
@@ -128,4 +136,18 @@ pub fn api_routes() -> Router<AppState> {
         .route("/login", post(login))
         .route("/logout", post(logout))
         .route("/me", get(me))
+}
+
+pub fn make(state: AppState) -> axum::Router {
+    use tower_http::services::ServeDir;
+    let inner = axum::Router::new()
+        .route("/ping", axum::routing::get(|| async { "pong" }))
+        .nest("/api", api_routes())
+        .fallback_service(ServeDir::new("./public"));
+    let router = if &state.prefix == "/" {
+        inner
+    } else {
+        axum::Router::new().nest(&state.prefix, inner)
+    };
+    router.with_state(state)
 }
