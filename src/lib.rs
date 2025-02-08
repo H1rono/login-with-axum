@@ -3,10 +3,10 @@ use std::env;
 use anyhow::Context;
 use sqlx::mysql;
 
-mod app;
 mod error;
 mod model;
 mod repository;
+mod router;
 mod token;
 
 pub use error::{Error, Result};
@@ -53,10 +53,10 @@ pub struct AppState {
 
 pub fn make_router(state: AppState, prefix: &str) -> axum::Router {
     let inner = axum::Router::new()
-        .nest("/", app::public_routes(prefix))
+        .nest("/", router::public_routes(prefix))
         .route("/ping", axum::routing::get(|| async { "pong" }))
-        .route("/me", axum::routing::get(app::me))
-        .nest("/api", app::api_routes())
+        .route("/me", axum::routing::get(router::me))
+        .nest("/api", router::api_routes())
         .with_state(state);
     axum::Router::new().nest(prefix, inner)
 }
