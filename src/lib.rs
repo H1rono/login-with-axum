@@ -1,7 +1,6 @@
 use std::env;
 
 use anyhow::Context;
-use sqlx::mysql;
 
 mod error;
 mod model;
@@ -10,14 +9,7 @@ mod router;
 mod token;
 
 pub use error::{Error, Result};
-
-#[must_use]
-#[derive(Debug, Clone)]
-pub struct Repository {
-    pool: mysql::MySqlPool,
-    bcrypt_cost: u32,
-}
-
+pub use repository::Repository;
 pub use token::Manager as TokenManager;
 
 pub fn conn_options_from_env(prefix: &str) -> anyhow::Result<repository::ConnectOptions> {

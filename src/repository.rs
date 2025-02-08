@@ -1,13 +1,18 @@
 use serde::{Deserialize, Serialize};
 use sqlx::mysql;
 
-use crate::Repository;
-
 mod options;
 mod user_passwords;
 mod users;
 
 const MIGRATOR: sqlx::migrate::Migrator = sqlx::migrate!("./migrations");
+
+#[must_use]
+#[derive(Debug, Clone)]
+pub struct Repository {
+    pool: mysql::MySqlPool,
+    bcrypt_cost: u32,
+}
 
 #[allow(unused)]
 impl Repository {
