@@ -4,7 +4,6 @@ use axum::response::Redirect;
 use axum::{Json, Router};
 use axum_extra::extract::cookie;
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
 
 use crate::model::User;
 use crate::{Repository, TokenManager};
@@ -39,7 +38,7 @@ pub async fn register(
     Form(req): Form<RegisterUserRequest>,
 ) -> crate::Result<Redirect> {
     // TODO: validation
-    let id = Uuid::new_v4();
+    let id = uuid::Uuid::new_v4();
     let user = User {
         id: id.into(),
         display_id: req.display_id,
