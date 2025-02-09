@@ -16,6 +16,8 @@ pub struct AppState {
     prefix: String,
 }
 
+const COOKIE_NAME: &str = "ax_session";
+
 impl AppState {
     pub fn new(repo: Repository, tm: TokenManager, prefix: &str) -> Self {
         Self {
@@ -81,7 +83,7 @@ pub async fn login(
         .token_manager
         .encode(user.id)
         .with_context(|| "encoding to JWT failed")?;
-    let cookie = cookie::Cookie::build(("ax_session", cookie_value))
+    let cookie = cookie::Cookie::build((COOKIE_NAME, cookie_value))
         .path(app.prefix.clone())
         .http_only(true)
         .build();
@@ -94,11 +96,11 @@ pub async fn logout(
     cookie_jar: cookie::CookieJar,
 ) -> crate::Result<(cookie::CookieJar, Redirect)> {
     let _cookie = cookie_jar
-        .get("ax_session")
+        .get(COOKIE_NAME)
         .ok_or_else(|| anyhow!("Unauthorized"))?;
     // TODO Expire within TokenManager
     // TODO: add attribute `Expires` with chrono
-    let cookie = cookie::Cookie::build("ax_session")
+    let cookie = cookie::Cookie::build(COOKIE_NAME)
         .removal()
         .path(app.prefix.clone())
         .http_only(true)
@@ -112,7 +114,7 @@ pub async fn me(
     cookie_jar: cookie::CookieJar,
 ) -> crate::Result<Json<User>> {
     let session_cookie = cookie_jar
-        .get("ax_session")
+        .get(COOKIE_NAME)
         .context("Unauthenticated")?
         .value();
     let user_id = app
