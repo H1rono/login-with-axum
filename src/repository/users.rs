@@ -107,9 +107,9 @@ impl Repository {
 
         match self.get_user_by_display_id(&user.display_id).await {
             Ok(_) => {
-                // TODO: add RejectKind::Conflict
-                let error = anyhow::anyhow!("A user with the same display id already exists");
-                return Err(error.into());
+                return Err(Elimination::conflict(
+                    "A user with the same display id already exists",
+                ));
             }
             Err(Elimination::Reject(r)) if r.kind() == RejectKind::NotFound => {}
             Err(e) => return Err(e),

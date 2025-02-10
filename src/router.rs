@@ -60,6 +60,7 @@ impl IntoResponse for ErrorResponse {
             RejectKind::Unauthorized => StatusCode::UNAUTHORIZED,
             RejectKind::BadRequest => StatusCode::BAD_REQUEST,
             RejectKind::NotFound => StatusCode::NOT_FOUND,
+            RejectKind::Conflict => StatusCode::CONFLICT,
         };
         match self.0 {
             Elimination::Reject(r) => {

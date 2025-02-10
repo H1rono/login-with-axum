@@ -9,6 +9,7 @@ pub enum RejectKind {
     Unauthorized,
     BadRequest,
     NotFound,
+    Conflict,
 }
 
 impl fmt::Display for RejectKind {
@@ -17,6 +18,7 @@ impl fmt::Display for RejectKind {
             Self::Unauthorized => "Unauthorized",
             Self::BadRequest => "Bad request",
             Self::NotFound => "Not found",
+            Self::Conflict => "Conflict",
         };
         f.write_str(s)
     }
@@ -95,6 +97,14 @@ impl<E: Send + Sync + 'static> Elimination<E> {
     pub fn not_found(message: impl Into<String>) -> Self {
         Reject {
             kind: RejectKind::NotFound,
+            message: message.into(),
+        }
+        .into()
+    }
+
+    pub fn conflict(message: impl Into<String>) -> Self {
+        Reject {
+            kind: RejectKind::Conflict,
             message: message.into(),
         }
         .into()
