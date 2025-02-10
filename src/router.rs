@@ -6,7 +6,7 @@ use axum_extra::extract::cookie;
 use serde::{Deserialize, Serialize};
 
 use crate::model::User;
-use crate::{Elimination, Repository, TokenManager};
+use crate::{Failure, Repository, TokenManager};
 
 #[must_use]
 #[derive(Clone)]
@@ -36,17 +36,17 @@ pub struct RegisterUserRequest {
 }
 
 #[derive(Debug)]
-pub struct ErrorResponse(Elimination);
+pub struct ErrorResponse(Failure);
 
-impl From<Elimination> for ErrorResponse {
-    fn from(value: Elimination) -> Self {
+impl From<Failure> for ErrorResponse {
+    fn from(value: Failure) -> Self {
         ErrorResponse(value)
     }
 }
 
 impl From<anyhow::Error> for ErrorResponse {
     fn from(value: anyhow::Error) -> Self {
-        Elimination::from(value).into()
+        Failure::from(value).into()
     }
 }
 
@@ -63,11 +63,11 @@ impl IntoResponse for ErrorResponse {
             RejectKind::Conflict => StatusCode::CONFLICT,
         };
         match self.0 {
-            Elimination::Reject(r) => {
+            Failure::Reject(r) => {
                 tracing::info!("Reject: {r}");
                 (status_code(&r), r.message().to_string()).into_response()
             }
-            Elimination::Error(e) => {
+            Failure::Error(e) => {
                 tracing::error!(error = ?e);
                 StatusCode::INTERNAL_SERVER_ERROR.into_response()
             }
@@ -113,7 +113,7 @@ pub async fn login(
         .verify_user_password(user.id, &req.password)
         .await?;
     if !verification {
-        let e = Elimination::unauthorized("unauthorized");
+        let e = Failure::unauthorized("unauthorized");
         return Err(e.into());
     }
     let cookie_value = app.token_manager.encode(user.id)?;
@@ -131,7 +131,7 @@ pub async fn logout(
 ) -> Result<(cookie::CookieJar, Redirect), ErrorResponse> {
     let _cookie = cookie_jar
         .get(COOKIE_NAME)
-        .ok_or_else(|| Elimination::unauthorized("Unauthorized"))?;
+        .ok_or_else(|| Failure::unauthorized("Unauthorized"))?;
     // TODO Expire within TokenManager
     // TODO: add attribute `Expires` with chrono
     let cookie = cookie::Cookie::build(COOKIE_NAME)

@@ -8,7 +8,7 @@ mod repository;
 mod router;
 mod token;
 
-pub use error::Elimination;
+pub use error::Failure;
 pub use repository::Repository;
 pub use router::{make as make_router, AppState};
 pub use token::Manager as TokenManager;

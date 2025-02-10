@@ -6,7 +6,7 @@ use jsonwebtoken as jwt;
 use serde::{Deserialize, Serialize};
 
 use crate::model::UserId;
-use crate::Elimination;
+use crate::Failure;
 
 #[must_use]
 #[derive(Clone)]
@@ -135,7 +135,7 @@ impl Manager {
         Builder::new()
     }
 
-    pub fn encode(&self, id: UserId) -> Result<String, Elimination> {
+    pub fn encode(&self, id: UserId) -> Result<String, Failure> {
         let iat = jwt::get_current_timestamp();
         let exp = iat + self.inner.lifetime.as_secs();
         let iss = self.inner.issuer.as_str();
@@ -147,7 +147,7 @@ impl Manager {
         Ok(encoded)
     }
 
-    pub fn decode(&self, token: &str) -> Result<UserId, Elimination> {
+    pub fn decode(&self, token: &str) -> Result<UserId, Failure> {
         let key = &self.inner.dec_key;
         let validation = &self.inner.validation;
         let token = jwt::decode(token, key, validation).context("Failed to decode JWT")?;

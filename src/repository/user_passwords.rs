@@ -2,7 +2,7 @@ use anyhow::Context;
 use sqlx::{query, query_as, FromRow, Type};
 
 use super::users::DbUserId;
-use crate::error::Elimination;
+use crate::error::Failure;
 use crate::model::{UserId, UserPassword};
 use crate::Repository;
 
@@ -34,7 +34,7 @@ impl Repository {
     pub(super) async fn get_user_password_by_id(
         &self,
         id: UserId,
-    ) -> Result<UserPassword, Elimination> {
+    ) -> Result<UserPassword, Failure> {
         let user_password: Option<DbUserPassword> =
             query_as("SELECT * FROM `user_passwords` WHERE `user_id` = ?")
                 .bind(DbUserId::from(id))
@@ -43,11 +43,11 @@ impl Repository {
                 .context("Failed to get user password")?;
         let user_password = user_password
             .map(|p| p.psk.into())
-            .ok_or_else(|| Elimination::not_found("password not found"))?;
+            .ok_or_else(|| Failure::not_found("password not found"))?;
         Ok(user_password)
     }
 
-    async fn write_user_password(&self, password: DbUserPassword) -> Result<(), Elimination> {
+    async fn write_user_password(&self, password: DbUserPassword) -> Result<(), Failure> {
         query("INSERT INTO `user_passwords` (`user_id`, `psk`) VALUES (?, ?)")
             .bind(password.id)
             .bind(password.psk)
@@ -57,7 +57,7 @@ impl Repository {
         Ok(())
     }
 
-    pub async fn save_raw_password(&self, id: UserId, raw: &str) -> Result<(), Elimination> {
+    pub async fn save_raw_password(&self, id: UserId, raw: &str) -> Result<(), Failure> {
         let psk = bcrypt::hash(raw, self.bcrypt_cost).context("Failed to hash password")?;
         let password = DbUserPassword {
             id: id.into(),
@@ -67,7 +67,7 @@ impl Repository {
         Ok(())
     }
 
-    pub async fn verify_user_password(&self, id: UserId, raw: &str) -> Result<bool, Elimination> {
+    pub async fn verify_user_password(&self, id: UserId, raw: &str) -> Result<bool, Failure> {
         let UserPassword(password) = self.get_user_password_by_id(id).await?;
         // TODO: log if err
         let res = bcrypt::verify(raw, &password).context("Failed to challenge bcrypt hash")?;

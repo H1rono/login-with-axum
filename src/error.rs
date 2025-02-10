@@ -47,14 +47,14 @@ impl Reject {
 }
 
 #[derive(Debug, Clone, thiserror::Error)]
-pub enum Elimination<E: Send + Sync + 'static = anyhow::Error> {
+pub enum Failure<E: Send + Sync + 'static = anyhow::Error> {
     #[error("{0}")]
     Reject(Reject),
     #[error(transparent)]
     Error(E),
 }
 
-impl<E> From<Reject> for Elimination<E>
+impl<E> From<Reject> for Failure<E>
 where
     E: Send + Sync + 'static,
 {
@@ -63,21 +63,21 @@ where
     }
 }
 
-impl From<anyhow::Error> for Elimination<anyhow::Error> {
+impl From<anyhow::Error> for Failure<anyhow::Error> {
     fn from(value: anyhow::Error) -> Self {
-        Elimination::Error(value)
+        Failure::Error(value)
     }
 }
 
 impl From<Box<dyn std::error::Error + Send + Sync + 'static>>
-    for Elimination<Box<dyn std::error::Error + Send + Sync + 'static>>
+    for Failure<Box<dyn std::error::Error + Send + Sync + 'static>>
 {
     fn from(value: Box<dyn std::error::Error + Send + Sync + 'static>) -> Self {
-        Elimination::Error(value)
+        Failure::Error(value)
     }
 }
 
-impl<E: Send + Sync + 'static> Elimination<E> {
+impl<E: Send + Sync + 'static> Failure<E> {
     pub fn unauthorized(message: impl Into<String>) -> Self {
         Reject {
             kind: RejectKind::Unauthorized,
@@ -111,15 +111,15 @@ impl<E: Send + Sync + 'static> Elimination<E> {
     }
 }
 
-impl<E1: Send + Sync + 'static> Elimination<E1> {
-    pub fn map<F, E2>(self, f: F) -> Elimination<E2>
+impl<E1: Send + Sync + 'static> Failure<E1> {
+    pub fn map<F, E2>(self, f: F) -> Failure<E2>
     where
         F: FnOnce(E1) -> E2,
         E2: Send + Sync + 'static,
     {
         match self {
-            Self::Reject(r) => Elimination::Reject(r),
-            Self::Error(e1) => Elimination::Error(f(e1)),
+            Self::Reject(r) => Failure::Reject(r),
+            Self::Error(e1) => Failure::Error(f(e1)),
         }
     }
 }

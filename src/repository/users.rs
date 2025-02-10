@@ -3,7 +3,7 @@ use sqlx::{query, query_as, Decode, Encode, FromRow, MySql, Type};
 use uuid::Uuid;
 
 use crate::model::{User, UserId};
-use crate::{Elimination, Repository};
+use crate::{Failure, Repository};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Type)]
 #[sqlx(transparent)]
@@ -72,7 +72,7 @@ impl Type<MySql> for UserId {
 
 #[allow(unused)]
 impl Repository {
-    pub async fn get_users(&self) -> Result<Vec<User>, Elimination> {
+    pub async fn get_users(&self) -> Result<Vec<User>, Failure> {
         let users = query_as("SELECT * FROM `users`")
             .fetch_all(&self.pool)
             .await
@@ -81,37 +81,37 @@ impl Repository {
         Ok(users)
     }
 
-    pub async fn get_user_by_id(&self, id: UserId) -> Result<User, Elimination> {
+    pub async fn get_user_by_id(&self, id: UserId) -> Result<User, Failure> {
         let id = DbUserId::from(id);
         let user: Option<DbUser> = query_as("SELECT * FROM `users` WHERE `id` = ?")
             .bind(id)
             .fetch_optional(&self.pool)
             .await
             .context("Failed to fetch user by id")?;
-        let user = user.ok_or_else(|| Elimination::not_found("User not found"))?;
+        let user = user.ok_or_else(|| Failure::not_found("User not found"))?;
         Ok(user.into())
     }
 
-    pub async fn get_user_by_display_id(&self, display_id: &str) -> Result<User, Elimination> {
+    pub async fn get_user_by_display_id(&self, display_id: &str) -> Result<User, Failure> {
         let user: Option<DbUser> = query_as("SELECT * FROM `users` WHERE `display_id` = ?")
             .bind(display_id)
             .fetch_optional(&self.pool)
             .await
             .context("Failed to fetch user by display_id")?;
-        let user = user.ok_or_else(|| Elimination::not_found("User not found"))?;
+        let user = user.ok_or_else(|| Failure::not_found("User not found"))?;
         Ok(user.into())
     }
 
-    pub async fn create_user(&self, user: User) -> Result<(), Elimination> {
+    pub async fn create_user(&self, user: User) -> Result<(), Failure> {
         use crate::error::RejectKind;
 
         match self.get_user_by_display_id(&user.display_id).await {
             Ok(_) => {
-                return Err(Elimination::conflict(
+                return Err(Failure::conflict(
                     "A user with the same display id already exists",
                 ));
             }
-            Err(Elimination::Reject(r)) if r.kind() == RejectKind::NotFound => {}
+            Err(Failure::Reject(r)) if r.kind() == RejectKind::NotFound => {}
             Err(e) => return Err(e),
         };
         query("INSERT INTO `users` (`id`, `display_id`, `name`) VALUES (?, ?, ?)")
