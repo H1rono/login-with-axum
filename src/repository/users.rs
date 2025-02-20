@@ -1,13 +1,12 @@
 use anyhow::Context;
-use sqlx::{query, query_as, Decode, Encode, FromRow, MySql, Type};
-use uuid::Uuid;
+use sqlx::{Decode, Encode, FromRow, MySql, Type};
 
 use crate::model::{User, UserId};
 use crate::{Failure, Repository};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Type)]
 #[sqlx(transparent)]
-pub(super) struct DbUserId(pub(super) Uuid);
+pub(super) struct DbUserId(pub(super) uuid::Uuid);
 
 impl From<UserId> for DbUserId {
     fn from(value: UserId) -> Self {
@@ -47,7 +46,7 @@ impl<'a> Decode<'a, MySql> for UserId {
     fn decode(
         value: <MySql as sqlx::Database>::ValueRef<'a>,
     ) -> Result<Self, sqlx::error::BoxDynError> {
-        <Uuid as Decode<'a, MySql>>::decode(value).map(UserId)
+        <uuid::Uuid as Decode<'a, MySql>>::decode(value).map(UserId)
     }
 }
 
@@ -62,43 +61,44 @@ impl<'a> Encode<'a, MySql> for UserId {
 
 impl Type<MySql> for UserId {
     fn type_info() -> <MySql as sqlx::Database>::TypeInfo {
-        <Uuid as Type<MySql>>::type_info()
+        <uuid::Uuid as Type<MySql>>::type_info()
     }
 
     fn compatible(ty: &<MySql as sqlx::Database>::TypeInfo) -> bool {
-        <Uuid as Type<MySql>>::compatible(ty)
+        <uuid::Uuid as Type<MySql>>::compatible(ty)
     }
 }
 
-#[allow(unused)]
 impl Repository {
     pub async fn get_users(&self) -> Result<Vec<User>, Failure> {
-        let users = query_as("SELECT * FROM `users`")
+        let users = sqlx::query_as("SELECT * FROM `users`")
             .fetch_all(&self.pool)
             .await
-            .context("Failed to fetch users")?;
-        let users = users.into_iter().map(|u: DbUser| u.into()).collect();
+            .context("Failed to fetch users")?
+            .into_iter()
+            .map(|u: DbUser| u.into())
+            .collect();
         Ok(users)
     }
 
     pub async fn get_user_by_id(&self, id: UserId) -> Result<User, Failure> {
         let id = DbUserId::from(id);
-        let user: Option<DbUser> = query_as("SELECT * FROM `users` WHERE `id` = ?")
+        let user = sqlx::query_as::<_, DbUser>("SELECT * FROM `users` WHERE `id` = ?")
             .bind(id)
             .fetch_optional(&self.pool)
             .await
-            .context("Failed to fetch user by id")?;
-        let user = user.ok_or_else(|| Failure::not_found("User not found"))?;
+            .context("Failed to fetch user by id")?
+            .ok_or_else(|| Failure::not_found("User not found"))?;
         Ok(user.into())
     }
 
     pub async fn get_user_by_display_id(&self, display_id: &str) -> Result<User, Failure> {
-        let user: Option<DbUser> = query_as("SELECT * FROM `users` WHERE `display_id` = ?")
+        let user = sqlx::query_as::<_, DbUser>("SELECT * FROM `users` WHERE `display_id` = ?")
             .bind(display_id)
             .fetch_optional(&self.pool)
             .await
-            .context("Failed to fetch user by display_id")?;
-        let user = user.ok_or_else(|| Failure::not_found("User not found"))?;
+            .context("Failed to fetch user by display_id")?
+            .ok_or_else(|| Failure::not_found("User not found"))?;
         Ok(user.into())
     }
 
@@ -114,7 +114,7 @@ impl Repository {
             Err(Failure::Reject(r)) if r.kind() == RejectKind::NotFound => {}
             Err(e) => return Err(e),
         };
-        query("INSERT INTO `users` (`id`, `display_id`, `name`) VALUES (?, ?, ?)")
+        sqlx::query("INSERT INTO `users` (`id`, `display_id`, `name`) VALUES (?, ?, ?)")
             .bind(user.id)
             .bind(user.display_id)
             .bind(user.name)

@@ -1,12 +1,10 @@
 use anyhow::Context;
-use sqlx::{query, query_as, FromRow, Type};
 
-use super::users::DbUserId;
+use super::{users::DbUserId, Repository};
 use crate::error::Failure;
 use crate::model::{UserId, UserPassword};
-use crate::Repository;
 
-#[derive(Debug, Clone, Type)]
+#[derive(Debug, Clone, sqlx::Type)]
 #[sqlx(transparent)]
 struct DbPsk(String);
 
@@ -22,33 +20,30 @@ impl From<UserPassword> for DbPsk {
     }
 }
 
-#[derive(Debug, Clone, FromRow)]
+#[derive(Debug, Clone, sqlx::FromRow)]
 struct DbUserPassword {
     #[sqlx(rename = "user_id")]
     id: DbUserId,
     psk: DbPsk,
 }
 
-#[allow(unused)]
 impl Repository {
     pub(super) async fn get_user_password_by_id(
         &self,
         id: UserId,
     ) -> Result<UserPassword, Failure> {
-        let user_password: Option<DbUserPassword> =
-            query_as("SELECT * FROM `user_passwords` WHERE `user_id` = ?")
-                .bind(DbUserId::from(id))
-                .fetch_optional(&self.pool)
-                .await
-                .context("Failed to get user password")?;
-        let user_password = user_password
-            .map(|p| p.psk.into())
+        let user_password = sqlx::query_as("SELECT * FROM `user_passwords` WHERE `user_id` = ?")
+            .bind(DbUserId::from(id))
+            .fetch_optional(&self.pool)
+            .await
+            .context("Failed to get user password")?
+            .map(|p: DbUserPassword| p.psk.into())
             .ok_or_else(|| Failure::not_found("password not found"))?;
         Ok(user_password)
     }
 
     async fn write_user_password(&self, password: DbUserPassword) -> Result<(), Failure> {
-        query("INSERT INTO `user_passwords` (`user_id`, `psk`) VALUES (?, ?)")
+        sqlx::query("INSERT INTO `user_passwords` (`user_id`, `psk`) VALUES (?, ?)")
             .bind(password.id)
             .bind(password.psk)
             .execute(&self.pool)
