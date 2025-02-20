@@ -1,24 +1,11 @@
 use anyhow::Context;
 
-use super::{users::DbUserId, Repository};
+use super::users::DbUserId;
 use crate::error::Failure;
-use crate::model::{UserId, UserPassword};
 
 #[derive(Debug, Clone, sqlx::Type)]
 #[sqlx(transparent)]
 struct DbPsk(String);
-
-impl From<DbPsk> for UserPassword {
-    fn from(value: DbPsk) -> Self {
-        Self(value.0)
-    }
-}
-
-impl From<UserPassword> for DbPsk {
-    fn from(value: UserPassword) -> Self {
-        Self(value.0)
-    }
-}
 
 #[derive(Debug, Clone, sqlx::FromRow)]
 struct DbUserPassword {
@@ -27,45 +14,48 @@ struct DbUserPassword {
     psk: DbPsk,
 }
 
-impl Repository {
-    pub(super) async fn get_user_password_by_id(
-        &self,
-        id: UserId,
-    ) -> Result<UserPassword, Failure> {
-        let user_password = sqlx::query_as("SELECT * FROM `user_passwords` WHERE `user_id` = ?")
-            .bind(DbUserId::from(id))
-            .fetch_optional(&self.pool)
-            .await
-            .context("Failed to get user password")?
-            .map(|p: DbUserPassword| p.psk.into())
-            .ok_or_else(|| Failure::not_found("password not found"))?;
-        Ok(user_password)
-    }
+#[must_use]
+pub trait BcryptConfig: Send + Sync {
+    fn bcrypt_cost(&self) -> u32;
+}
 
-    async fn write_user_password(&self, password: DbUserPassword) -> Result<(), Failure> {
+impl<Context> crate::entity::UserPasswordRepository<Context> for super::Impl
+where
+    Context: BcryptConfig + AsRef<sqlx::MySqlPool>,
+{
+    async fn save_user_password(
+        &self,
+        ctx: Context,
+        params: crate::entity::SaveUserPasswordParams,
+    ) -> Result<(), Failure> {
+        let psk = bcrypt::hash(params.raw, ctx.bcrypt_cost()).context("Failed to hash password")?;
+        let password = DbUserPassword {
+            id: params.user_id.into(),
+            psk: DbPsk(psk),
+        };
         sqlx::query("INSERT INTO `user_passwords` (`user_id`, `psk`) VALUES (?, ?)")
             .bind(password.id)
             .bind(password.psk)
-            .execute(&self.pool)
+            .execute(ctx.as_ref())
             .await
             .context("Failed to insert user password")?;
         Ok(())
     }
 
-    pub async fn save_raw_password(&self, id: UserId, raw: &str) -> Result<(), Failure> {
-        let psk = bcrypt::hash(raw, self.bcrypt_cost).context("Failed to hash password")?;
-        let password = DbUserPassword {
-            id: id.into(),
-            psk: DbPsk(psk),
-        };
-        self.write_user_password(password).await?;
-        Ok(())
-    }
-
-    pub async fn verify_user_password(&self, id: UserId, raw: &str) -> Result<bool, Failure> {
-        let UserPassword(password) = self.get_user_password_by_id(id).await?;
+    async fn verify_user_password(
+        &self,
+        ctx: Context,
+        params: crate::entity::VerifyUserPasswordParams,
+    ) -> Result<bool, Failure> {
+        let DbPsk(psk) = sqlx::query_as("SELECT * FROM `user_passwords` WHERE `user_id` = ?")
+            .bind(DbUserId::from(params.user_id))
+            .fetch_optional(ctx.as_ref())
+            .await
+            .context("Failed to get user password")?
+            .map(|p: DbUserPassword| p.psk)
+            .ok_or_else(|| Failure::not_found("password not found"))?;
         // TODO: log if err
-        let res = bcrypt::verify(raw, &password).context("Failed to challenge bcrypt hash")?;
+        let res = bcrypt::verify(params.raw, &psk).context("Failed to challenge bcrypt hash")?;
         Ok(res)
     }
 }

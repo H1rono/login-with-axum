@@ -32,6 +32,10 @@ impl Repository {
 }
 
 #[must_use]
+#[derive(Debug, Clone, Copy, Default)]
+pub struct Impl;
+
+#[must_use]
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Deserialize, Serialize)]
 pub struct ConnectOptions {
     hostname: String,
