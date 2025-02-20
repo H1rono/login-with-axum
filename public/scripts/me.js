@@ -3,12 +3,13 @@ import User from "./user.mjs";
 
 function nop() {}
 
+// deno-lint-ignore require-await
 async function setupForm() {
     const root = rootPath("me.html");
     if (root !== undefined) {
         console.log(`Root path: "${root}"`);
     } else {
-        console.error("login.html is not in the current location");
+        console.error("me.html is not in the current location");
         return nop;
     }
     const form = document.getElementById("logout-form");

@@ -9,7 +9,7 @@
  * rootPath('scripts') // => undefined
  */
 export function rootPath(relative) {
-    var tail = relative;
+    let tail = relative;
     if (tail.startsWith("./")) {
         tail = tail.substring(1);
     }
@@ -17,8 +17,9 @@ export function rootPath(relative) {
         tail = "/" + tail;
     }
 
-    if (!window.location.pathname.endsWith(tail)) {
+    const pathname = globalThis.location.pathname;
+    if (!pathname.endsWith(tail)) {
         return undefined;
     }
-    return window.location.pathname.substring(0, window.location.pathname.length - tail.length);
+    return pathname.substring(0, pathname.length - tail.length);
 }
