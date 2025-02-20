@@ -11,7 +11,6 @@ mod token;
 pub use error::Failure;
 pub use repository::Repository;
 pub use router::{make as make_router, AppState};
-pub use token::Manager as TokenManager;
 
 pub fn conn_options_from_env(prefix: &str) -> anyhow::Result<repository::ConnectOptions> {
     let var = |suffix| {

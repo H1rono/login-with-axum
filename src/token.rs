@@ -1,22 +1,93 @@
-use std::sync::Arc;
 use std::time::Duration;
 
 use anyhow::Context;
 use jsonwebtoken as jwt;
 use serde::{Deserialize, Serialize};
 
-use crate::model::UserId;
+use crate::entity::{Credential, UserId};
 use crate::Failure;
 
-#[must_use]
-#[derive(Clone)]
-pub struct Manager {
-    inner: Arc<Inner>,
+#[derive(Debug, Clone, Serialize)]
+struct EncodeClaims<'a> {
+    iat: u64,
+    exp: u64,
+    #[serde(borrow = "'a")]
+    iss: &'a str,
+    sub: UserId,
+}
+
+#[allow(unused)]
+#[derive(Debug, Clone, Deserialize)]
+struct DecodeClaims {
+    iat: u64,
+    exp: u64,
+    iss: String,
+    sub: UserId,
+}
+
+pub trait JwtConfig: Send + Sync {
+    fn algorithm(&self) -> jwt::Algorithm;
+    fn issuer(&self) -> &str;
+    fn lifetime(&self) -> Duration;
+    fn encodign_key(&self) -> &jwt::EncodingKey;
+    fn decoding_key(&self) -> &jwt::DecodingKey;
+    fn validation(&self) -> &jwt::Validation;
+}
+
+#[derive(Debug, Clone, Copy, Default)]
+pub struct Jwt;
+
+impl Jwt {
+    pub fn config_builder() -> Builder {
+        Builder::new()
+    }
+}
+
+impl<Context> crate::entity::CredentialManager<Context> for Jwt
+where
+    Context: JwtConfig,
+{
+    async fn make_credential(
+        &self,
+        ctx: Context,
+        params: crate::entity::MakeCredentialParams,
+    ) -> Result<Credential, Failure> {
+        let iat = jwt::get_current_timestamp();
+        let exp = iat + ctx.lifetime().as_secs();
+        let iss = ctx.issuer();
+        let sub = params.user_id;
+        let claims = EncodeClaims { iat, exp, iss, sub };
+        let header = jwt::Header::new(ctx.algorithm());
+        let key = ctx.encodign_key();
+        let encoded = jwt::encode(&header, &claims, key).context("Failed to encode JWT")?;
+        Ok(Credential(encoded))
+    }
+
+    async fn revoke_credential(
+        &self,
+        _ctx: Context,
+        _credential: Credential,
+    ) -> Result<(), Failure> {
+        todo!()
+    }
+
+    async fn check_credential(
+        &self,
+        ctx: Context,
+        credential: Credential,
+    ) -> Result<UserId, Failure> {
+        let Credential(token) = credential;
+        let key = ctx.decoding_key();
+        let validation = ctx.validation();
+        let token = jwt::decode(&token, key, validation).context("Failed to decode JWT")?;
+        let DecodeClaims { sub, .. } = token.claims;
+        Ok(sub)
+    }
 }
 
 #[must_use]
 #[derive(Clone)]
-struct Inner {
+struct JwtConfigImpl {
     algorithm: jwt::Algorithm,
     issuer: String,
     lifetime: Duration,
@@ -87,7 +158,7 @@ impl<Key, Issuer, Lifetime> Builder<Key, Issuer, Lifetime> {
 }
 
 impl Builder<String, String, Duration> {
-    pub fn build(self) -> Manager {
+    pub fn build(self) -> JwtConfigImpl {
         let Self {
             key: raw_key,
             issuer,
@@ -97,7 +168,7 @@ impl Builder<String, String, Duration> {
         let enc_key = jwt::EncodingKey::from_secret(raw_key.as_bytes());
         let dec_key = jwt::DecodingKey::from_secret(raw_key.as_bytes());
         let validation = jwt::Validation::new(algorithm);
-        let inner = Inner {
+        JwtConfigImpl {
             algorithm,
             issuer,
             lifetime,
@@ -105,53 +176,32 @@ impl Builder<String, String, Duration> {
             enc_key,
             dec_key,
             validation,
-        };
-        Manager {
-            inner: Arc::new(inner),
         }
     }
 }
 
-#[derive(Debug, Clone, Serialize)]
-struct EncodeClaims<'a> {
-    iat: u64,
-    exp: u64,
-    #[serde(borrow = "'a")]
-    iss: &'a str,
-    sub: UserId,
-}
-
-#[allow(unused)]
-#[derive(Debug, Clone, Deserialize)]
-struct DecodeClaims {
-    iat: u64,
-    exp: u64,
-    iss: String,
-    sub: UserId,
-}
-
-impl Manager {
-    pub fn builder() -> Builder {
-        Builder::new()
+impl JwtConfig for JwtConfigImpl {
+    fn algorithm(&self) -> jsonwebtoken::Algorithm {
+        self.algorithm
     }
 
-    pub fn encode(&self, id: UserId) -> Result<String, Failure> {
-        let iat = jwt::get_current_timestamp();
-        let exp = iat + self.inner.lifetime.as_secs();
-        let iss = self.inner.issuer.as_str();
-        let sub = id;
-        let claims = EncodeClaims { iat, exp, iss, sub };
-        let header = jwt::Header::new(self.inner.algorithm);
-        let key = &self.inner.enc_key;
-        let encoded = jwt::encode(&header, &claims, key).context("Failed to encode JWT")?;
-        Ok(encoded)
+    fn issuer(&self) -> &str {
+        &self.issuer
     }
 
-    pub fn decode(&self, token: &str) -> Result<UserId, Failure> {
-        let key = &self.inner.dec_key;
-        let validation = &self.inner.validation;
-        let token = jwt::decode(token, key, validation).context("Failed to decode JWT")?;
-        let DecodeClaims { sub, .. } = token.claims;
-        Ok(sub)
+    fn lifetime(&self) -> Duration {
+        self.lifetime
+    }
+
+    fn encodign_key(&self) -> &jsonwebtoken::EncodingKey {
+        &self.enc_key
+    }
+
+    fn decoding_key(&self) -> &jsonwebtoken::DecodingKey {
+        &self.dec_key
+    }
+
+    fn validation(&self) -> &jsonwebtoken::Validation {
+        &self.validation
     }
 }
