@@ -203,7 +203,7 @@ where
     let inner = axum::Router::new()
         .route("/ping", axum::routing::get(|| async { "pong" }))
         .nest("/api", AppState::<S>::router())
-        .fallback_service(ServeDir::new("./public"));
+        .fallback_service(ServeDir::new("./dist"));
     let prefix = state.path_prefix();
     let router = if prefix == "/" {
         inner
