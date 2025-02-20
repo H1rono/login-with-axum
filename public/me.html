@@ -1,18 +1,16 @@
 <!DOCTYPE html>
 <html>
+    <head>
+        <title>Hello!</title>
+        <script defer async type="module" src="./scripts/me.js"></script>
+    </head>
 
-<head>
-    <title>Hello!</title>
-    <script defer async type="module" src="./scripts/me.js"></script>
-</head>
-
-<body>
-    <h1>Hello <span class="field-name"></span>!</h1>
-    <p>Your id is "<span class="field-id"></span>".</p>
-    <hr>
-    <form id="logout-form" action="%BASE_URL%api/logout" method="POST">
-        <button>logout</button>
-    </form>
-</body>
-
+    <body>
+        <h1>Hello <span class="field-name"></span>!</h1>
+        <p>Your id is "<span class="field-id"></span>".</p>
+        <hr>
+        <form id="logout-form" action="%BASE_URL%api/logout" method="POST">
+            <button>logout</button>
+        </form>
+    </body>
 </html>

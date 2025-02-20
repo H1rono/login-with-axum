@@ -15,5 +15,13 @@
     "imports": {
         "@deno/vite-plugin": "npm:@deno/vite-plugin@^1.0.0",
         "vite": "npm:vite@^6.0.1"
+    },
+    "fmt": {
+        "useTabs": false,
+        "lineWidth": 100,
+        "indentWidth": 4,
+        "semiColons": true,
+        "singleQuote": false,
+        "include": ["public/", "vite.config.ts"]
     }
 }

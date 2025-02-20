@@ -10,11 +10,11 @@
  */
 export function rootPath(relative) {
     var tail = relative;
-    if (tail.startsWith('./')) {
+    if (tail.startsWith("./")) {
         tail = tail.substring(1);
     }
-    if (!tail.startsWith('/')) {
-        tail = '/' + tail;
+    if (!tail.startsWith("/")) {
+        tail = "/" + tail;
     }
 
     if (!window.location.pathname.endsWith(tail)) {

@@ -1,26 +1,24 @@
 <!DOCTYPE html>
 <html>
+    <head>
+        <title>Login</title>
+        <script defer type="module" src="./scripts/login.js"></script>
+    </head>
 
-<head>
-    <title>Login</title>
-    <script defer type="module" src="./scripts/login.js"></script>
-</head>
-
-<body>
-    <h1>Login</h1>
-    <form id="login-form" action="%BASE_URL%api/login" method="POST">
-        <div>
-            <label for="display_id">Your ID</label>
-            <input name="display_id" id="display_id" type="text" value="" />
-        </div>
-        <div>
-            <label for="password">Password</label>
-            <input name="password" id="password" type="password" value="" />
-        </div>
-        <div>
-            <button>Login</button>
-        </div>
-    </form>
-</body>
-
+    <body>
+        <h1>Login</h1>
+        <form id="login-form" action="%BASE_URL%api/login" method="POST">
+            <div>
+                <label for="display_id">Your ID</label>
+                <input name="display_id" id="display_id" type="text" value="" />
+            </div>
+            <div>
+                <label for="password">Password</label>
+                <input name="password" id="password" type="password" value="" />
+            </div>
+            <div>
+                <button>Login</button>
+            </div>
+        </form>
+    </body>
 </html>

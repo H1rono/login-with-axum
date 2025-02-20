@@ -20,12 +20,12 @@ class User {
         const displayId = json["display_id"];
         const name = json["name"];
 
-        const validId = typeof id === 'string';
-        const validDisplayId = typeof displayId === 'string';
-        const validName = typeof name === 'string';
+        const validId = typeof id === "string";
+        const validDisplayId = typeof displayId === "string";
+        const validName = typeof name === "string";
         const valid = validId && validDisplayId && validName;
         if (!valid) {
-            console.error('Invalid JSON data');
+            console.error("Invalid JSON data");
             return undefined;
         }
 
