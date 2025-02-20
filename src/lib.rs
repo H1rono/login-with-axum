@@ -4,7 +4,6 @@ use anyhow::Context;
 
 pub mod entity;
 mod error;
-mod model;
 mod repository;
 mod router;
 mod token;
