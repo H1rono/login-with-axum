@@ -35,8 +35,17 @@ RUN --mount=type=cache,target=/var/cache/rustup,sharing=locked \
     bash /helper.sh add_target \
     && cargo build --release --locked --config /cargo-config.toml \
     && bash /helper.sh extract_binary "${CARGO_TARGET_DIR}" > /target/main \
-    && chmod +x /target/main \
-    && cp -r ./public /public
+    && chmod +x /target/main
+
+FROM --platform=$BUILDPLATFORM denoland/deno:2.2.0 AS frontend-builder
+
+WORKDIR /srv
+
+COPY deno.json deno.lock vite.config.ts ./
+RUN deno install --frozen --node-modules-dir=manual
+
+COPY public ./public
+RUN deno task --frozen --node-modules-dir=manual build
 
 FROM debian:bookworm-slim AS debian-slim
 
@@ -46,7 +55,7 @@ RUN --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
     apt-get -qq update \
     && apt-get install -qq --no-install-recommends libssl-dev
 
-COPY --from=builder /public /srv/public
 COPY --from=builder /target/main /srv/main
+COPY --from=frontend-builder /srv/dist /srv/dist
 
 CMD [ "/srv/main" ]
