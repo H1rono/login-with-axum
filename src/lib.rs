@@ -4,11 +4,13 @@ use anyhow::Context;
 
 pub mod entity;
 mod error;
+pub mod provide;
 mod repository;
 mod router;
 mod token;
 
 pub use error::Failure;
+pub use provide::State;
 pub use repository::Repository;
 pub use router::{make as make_router, AppState};
 
