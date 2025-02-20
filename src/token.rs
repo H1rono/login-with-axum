@@ -87,7 +87,7 @@ where
 
 #[must_use]
 #[derive(Clone)]
-struct JwtConfigImpl {
+pub struct JwtConfigImpl {
     algorithm: jwt::Algorithm,
     issuer: String,
     lifetime: Duration,
@@ -181,6 +181,32 @@ impl Builder<String, String, Duration> {
 }
 
 impl JwtConfig for JwtConfigImpl {
+    fn algorithm(&self) -> jsonwebtoken::Algorithm {
+        self.algorithm
+    }
+
+    fn issuer(&self) -> &str {
+        &self.issuer
+    }
+
+    fn lifetime(&self) -> Duration {
+        self.lifetime
+    }
+
+    fn encodign_key(&self) -> &jsonwebtoken::EncodingKey {
+        &self.enc_key
+    }
+
+    fn decoding_key(&self) -> &jsonwebtoken::DecodingKey {
+        &self.dec_key
+    }
+
+    fn validation(&self) -> &jsonwebtoken::Validation {
+        &self.validation
+    }
+}
+
+impl JwtConfig for &JwtConfigImpl {
     fn algorithm(&self) -> jsonwebtoken::Algorithm {
         self.algorithm
     }
