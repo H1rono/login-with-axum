@@ -28,6 +28,7 @@ async fn main() -> anyhow::Result<()> {
         pool,
         impls: lib::provide::Impls::default(),
     };
+    state.setup().await?;
     let app = lib::make_router(Arc::new(state)).layer(TraceLayer::new_for_http());
     let port: u16 = load::port()?;
     let addr = std::net::SocketAddr::from(([0, 0, 0, 0], port));

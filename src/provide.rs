@@ -90,3 +90,9 @@ impl crate::entity::ProvideCredentialManager for State {
         &self.impls.jwt
     }
 }
+
+impl State {
+    pub async fn setup(&self) -> anyhow::Result<()> {
+        self.impls.repository.migrate(&self.pool).await
+    }
+}
