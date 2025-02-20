@@ -2,6 +2,7 @@ use std::env;
 
 use anyhow::Context;
 
+pub mod entity;
 mod error;
 mod model;
 mod repository;
