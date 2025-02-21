@@ -16,17 +16,17 @@ async fn main() -> anyhow::Result<()> {
         .or_else(|_| load::pool("MARIADB_"))
         .or_else(|_| load::pool("NS_MARIADB_"))
         .await?;
-    let jwt_config = load::jwt_config()?;
+    let jwt = load::jwt()?;
     let bcrypt_cost = load::bcrypt_cost()?;
     let path_prefix = load::path_prefix();
     let cookie_name = load::cookie_name();
     let state = lib::State {
-        token_config: jwt_config,
         bcrypt_cost,
         path_prefix,
         cookie_name,
         pool,
-        impls: lib::provide::Impls::default(),
+        repo: lib::RepositoryImpl,
+        jwt,
     };
     state.setup().await?;
     let app = lib::make_router(Arc::new(state)).layer(TraceLayer::new_for_http());
@@ -71,7 +71,7 @@ mod load {
         Ok(pool)
     }
 
-    pub fn jwt_config() -> anyhow::Result<lib::token::JwtConfigImpl> {
+    pub fn jwt() -> anyhow::Result<lib::token::Jwt> {
         let issuer = std::env::var("JWT_ISSUER").unwrap_or_else(|_| "login-with-axum".to_string());
         let key = std::env::var("JWT_KEY").context("JWT_KEY not found")?;
         let lifetime = std::env::var("JWT_LIFETIME")
@@ -79,7 +79,7 @@ mod load {
             .parse()
             .with_context(|| "Failed to load JWT_LIFETIME as secs")?;
         let lifetime = std::time::Duration::from_secs(lifetime);
-        let config = lib::token::Jwt::config_builder()
+        let config = lib::token::Jwt::builder()
             .issuer(&issuer)
             .key(&key)
             .lifetime(lifetime)

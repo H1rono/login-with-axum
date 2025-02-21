@@ -25,40 +25,35 @@ struct DecodeClaims {
     sub: UserId,
 }
 
-pub trait JwtConfig: Send + Sync {
-    fn algorithm(&self) -> jwt::Algorithm;
-    fn issuer(&self) -> &str;
-    fn lifetime(&self) -> Duration;
-    fn encodign_key(&self) -> &jwt::EncodingKey;
-    fn decoding_key(&self) -> &jwt::DecodingKey;
-    fn validation(&self) -> &jwt::Validation;
-}
-
-#[derive(Debug, Clone, Copy, Default)]
-pub struct Jwt;
-
-impl Jwt {
-    pub fn config_builder() -> Builder {
-        Builder::new()
-    }
+#[must_use]
+#[derive(Clone)]
+pub struct Jwt {
+    algorithm: jwt::Algorithm,
+    issuer: String,
+    lifetime: Duration,
+    #[allow(unused)]
+    raw_key: String,
+    enc_key: jwt::EncodingKey,
+    dec_key: jwt::DecodingKey,
+    validation: jwt::Validation,
 }
 
 impl<Context> crate::entity::CredentialManager<Context> for Jwt
 where
-    Context: JwtConfig,
+    Context: Send + Sync,
 {
     async fn make_credential(
         &self,
-        ctx: Context,
+        _ctx: Context,
         params: crate::entity::MakeCredentialParams,
     ) -> Result<Credential, Failure> {
         let iat = jwt::get_current_timestamp();
-        let exp = iat + ctx.lifetime().as_secs();
-        let iss = ctx.issuer();
+        let exp = iat + self.lifetime.as_secs();
+        let iss = &self.issuer;
         let sub = params.user_id;
         let claims = EncodeClaims { iat, exp, iss, sub };
-        let header = jwt::Header::new(ctx.algorithm());
-        let key = ctx.encodign_key();
+        let header = jwt::Header::new(self.algorithm);
+        let key = &self.enc_key;
         let encoded = jwt::encode(&header, &claims, key).context("Failed to encode JWT")?;
         Ok(Credential(encoded))
     }
@@ -73,29 +68,16 @@ where
 
     async fn check_credential(
         &self,
-        ctx: Context,
+        _ctx: Context,
         credential: Credential,
     ) -> Result<UserId, Failure> {
         let Credential(token) = credential;
-        let key = ctx.decoding_key();
-        let validation = ctx.validation();
+        let key = &self.dec_key;
+        let validation = &self.validation;
         let token = jwt::decode(&token, key, validation).context("Failed to decode JWT")?;
         let DecodeClaims { sub, .. } = token.claims;
         Ok(sub)
     }
-}
-
-#[must_use]
-#[derive(Clone)]
-pub struct JwtConfigImpl {
-    algorithm: jwt::Algorithm,
-    issuer: String,
-    lifetime: Duration,
-    #[allow(unused)]
-    raw_key: String,
-    enc_key: jwt::EncodingKey,
-    dec_key: jwt::DecodingKey,
-    validation: jwt::Validation,
 }
 
 #[must_use]
@@ -104,6 +86,12 @@ pub struct Builder<Key = (), Issuer = (), Lifetime = ()> {
     key: Key,
     issuer: Issuer,
     lifetime: Lifetime,
+}
+
+impl Jwt {
+    pub fn builder() -> Builder {
+        Builder::new()
+    }
 }
 
 impl Builder {
@@ -158,7 +146,7 @@ impl<Key, Issuer, Lifetime> Builder<Key, Issuer, Lifetime> {
 }
 
 impl Builder<String, String, Duration> {
-    pub fn build(self) -> JwtConfigImpl {
+    pub fn build(self) -> Jwt {
         let Self {
             key: raw_key,
             issuer,
@@ -168,7 +156,7 @@ impl Builder<String, String, Duration> {
         let enc_key = jwt::EncodingKey::from_secret(raw_key.as_bytes());
         let dec_key = jwt::DecodingKey::from_secret(raw_key.as_bytes());
         let validation = jwt::Validation::new(algorithm);
-        JwtConfigImpl {
+        Jwt {
             algorithm,
             issuer,
             lifetime,
@@ -177,57 +165,5 @@ impl Builder<String, String, Duration> {
             dec_key,
             validation,
         }
-    }
-}
-
-impl JwtConfig for JwtConfigImpl {
-    fn algorithm(&self) -> jsonwebtoken::Algorithm {
-        self.algorithm
-    }
-
-    fn issuer(&self) -> &str {
-        &self.issuer
-    }
-
-    fn lifetime(&self) -> Duration {
-        self.lifetime
-    }
-
-    fn encodign_key(&self) -> &jsonwebtoken::EncodingKey {
-        &self.enc_key
-    }
-
-    fn decoding_key(&self) -> &jsonwebtoken::DecodingKey {
-        &self.dec_key
-    }
-
-    fn validation(&self) -> &jsonwebtoken::Validation {
-        &self.validation
-    }
-}
-
-impl JwtConfig for &JwtConfigImpl {
-    fn algorithm(&self) -> jsonwebtoken::Algorithm {
-        self.algorithm
-    }
-
-    fn issuer(&self) -> &str {
-        &self.issuer
-    }
-
-    fn lifetime(&self) -> Duration {
-        self.lifetime
-    }
-
-    fn encodign_key(&self) -> &jsonwebtoken::EncodingKey {
-        &self.enc_key
-    }
-
-    fn decoding_key(&self) -> &jsonwebtoken::DecodingKey {
-        &self.dec_key
-    }
-
-    fn validation(&self) -> &jsonwebtoken::Validation {
-        &self.validation
     }
 }

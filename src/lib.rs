@@ -7,6 +7,7 @@ pub mod token;
 
 use error::Failure;
 pub use provide::State;
+pub use repository::Impl as RepositoryImpl;
 pub use router::make as make_router;
 
 #[tracing::instrument]

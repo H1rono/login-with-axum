@@ -1,20 +1,15 @@
-#[derive(Debug, Clone, Copy, Default)]
-pub struct Impls {
-    repository: crate::repository::Impl,
-    jwt: crate::token::Jwt,
-}
-
+#[must_use]
 #[derive(Clone)]
 pub struct State {
     // configs
-    pub token_config: crate::token::JwtConfigImpl,
     pub bcrypt_cost: u32,
     pub cookie_name: String,
     pub path_prefix: String,
     // connections
     pub pool: sqlx::MySqlPool,
     // entity trait impls
-    pub impls: Impls,
+    pub repo: crate::repository::Impl,
+    pub jwt: crate::token::Jwt,
 }
 
 impl crate::router::RouteConfig for State {
@@ -60,7 +55,7 @@ impl crate::entity::ProvideUserRepository for State {
         UserRepoCtx(&self.pool)
     }
     fn user_repository(&self) -> &Self::UserRepository {
-        &self.impls.repository
+        &self.repo
     }
 }
 
@@ -75,24 +70,22 @@ impl crate::entity::ProvideUserPasswordRepository for State {
         }
     }
     fn user_password_repository(&self) -> &Self::UserPasswordRepository {
-        &self.impls.repository
+        &self.repo
     }
 }
 
 impl crate::entity::ProvideCredentialManager for State {
-    type Context<'a> = &'a crate::token::JwtConfigImpl;
+    type Context<'a> = ();
     type CredentialManager = crate::token::Jwt;
 
-    fn context(&self) -> Self::Context<'_> {
-        &self.token_config
-    }
+    fn context(&self) -> Self::Context<'_> {}
     fn credential_manager(&self) -> &Self::CredentialManager {
-        &self.impls.jwt
+        &self.jwt
     }
 }
 
 impl State {
     pub async fn setup(&self) -> anyhow::Result<()> {
-        self.impls.repository.migrate(&self.pool).await
+        self.repo.migrate(&self.pool).await
     }
 }
