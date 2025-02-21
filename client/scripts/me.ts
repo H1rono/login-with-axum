@@ -1,7 +1,7 @@
 import { rootPath } from "./location.ts";
 import User from "./user.ts";
 
-function nop() { }
+function nop() {}
 
 // deno-lint-ignore require-await
 async function setupForm() {
