@@ -1,4 +1,4 @@
-import { rootPath } from "./location.mjs";
+import { rootPath } from "./location.ts";
 
 function setupForm() {
     const root = rootPath("login.html");
@@ -8,7 +8,7 @@ function setupForm() {
         console.error("login.html is not in the current location");
         return;
     }
-    const form = document.getElementById("login-form");
+    const form = document.getElementById("login-form") as HTMLFormElement | null;
     if (!form) {
         console.error("Login form not found");
         return;

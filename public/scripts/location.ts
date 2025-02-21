@@ -8,7 +8,7 @@
  * rootPath('scripts/location.mjs') // => '/root'
  * rootPath('scripts') // => undefined
  */
-export function rootPath(relative) {
+export function rootPath(relative: string): string | undefined {
     let tail = relative;
     if (tail.startsWith("./")) {
         tail = tail.substring(1);

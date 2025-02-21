@@ -1,7 +1,7 @@
-import { rootPath } from "./location.mjs";
-import User from "./user.mjs";
+import { rootPath } from "./location.ts";
+import User from "./user.ts";
 
-function nop() {}
+function nop() { }
 
 // deno-lint-ignore require-await
 async function setupForm() {
@@ -12,7 +12,7 @@ async function setupForm() {
         console.error("me.html is not in the current location");
         return nop;
     }
-    const form = document.getElementById("logout-form");
+    const form = document.getElementById("logout-form") as HTMLFormElement | null;
     if (!form) {
         console.error("Logout form not found");
         return nop;
