@@ -4,8 +4,8 @@ use anyhow::Context;
 use jsonwebtoken as jwt;
 use serde::{Deserialize, Serialize};
 
-use crate::entity::{Credential, UserId};
 use crate::Failure;
+use crate::entity::{Credential, UserId};
 
 #[derive(Debug, Clone, Serialize)]
 struct EncodeClaims<'a> {

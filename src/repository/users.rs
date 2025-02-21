@@ -1,7 +1,7 @@
 use anyhow::Context;
 
-use crate::entity::{User, UserId};
 use crate::Failure;
+use crate::entity::{User, UserId};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, sqlx::Type)]
 #[sqlx(transparent)]

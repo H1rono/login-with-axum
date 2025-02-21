@@ -6,7 +6,7 @@ use axum::response::{IntoResponse, Redirect};
 use axum_extra::extract::cookie;
 use serde::{Deserialize, Serialize};
 
-use crate::{entity, Failure};
+use crate::{Failure, entity};
 
 pub trait RouteConfig: Send + Sync {
     fn cookie_name(&self) -> &str;

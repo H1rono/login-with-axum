@@ -102,11 +102,7 @@ mod load {
         } else {
             format!("/{p}")
         };
-        if p.ends_with('/') {
-            p
-        } else {
-            format!("{p}/")
-        }
+        if p.ends_with('/') { p } else { format!("{p}/") }
     }
 
     pub fn cookie_name() -> String {
