@@ -25,7 +25,7 @@ async fn main() -> anyhow::Result<()> {
         path_prefix,
         cookie_name,
         pool,
-        repo: lib::RepositoryImpl,
+        repo: lib::Repository,
         jwt,
     };
     state.setup().await?;

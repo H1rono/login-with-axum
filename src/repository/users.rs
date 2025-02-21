@@ -41,7 +41,7 @@ impl From<DbUser> for User {
     }
 }
 
-impl<Context> crate::entity::UserRepository<Context> for super::Impl
+impl<Context> crate::entity::UserRepository<Context> for super::Repository
 where
     Context: AsRef<sqlx::MySqlPool> + Send + Sync,
 {
@@ -101,7 +101,7 @@ where
     }
 }
 
-impl super::Impl {
+impl super::Repository {
     async fn get_user_by_id(&self, pool: &sqlx::MySqlPool, id: UserId) -> Result<User, Failure> {
         let id = DbUserId::from(id);
         let user = sqlx::query_as::<_, DbUser>("SELECT * FROM `users` WHERE `id` = ?")

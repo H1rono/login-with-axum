@@ -8,7 +8,7 @@ pub struct State {
     // connections
     pub pool: sqlx::MySqlPool,
     // entity trait impls
-    pub repo: crate::repository::Impl,
+    pub repo: crate::repository::Repository,
     pub jwt: crate::token::Jwt,
 }
 
@@ -49,7 +49,7 @@ impl crate::repository::user_passwords::BcryptConfig for UserPasswordRepoCtx<'_>
 
 impl crate::entity::ProvideUserRepository for State {
     type Context<'a> = UserRepoCtx<'a>;
-    type UserRepository = crate::repository::Impl;
+    type UserRepository = crate::repository::Repository;
 
     fn context(&self) -> Self::Context<'_> {
         UserRepoCtx(&self.pool)
@@ -61,7 +61,7 @@ impl crate::entity::ProvideUserRepository for State {
 
 impl crate::entity::ProvideUserPasswordRepository for State {
     type Context<'a> = UserPasswordRepoCtx<'a>;
-    type UserPasswordRepository = crate::repository::Impl;
+    type UserPasswordRepository = crate::repository::Repository;
 
     fn context(&self) -> Self::Context<'_> {
         UserPasswordRepoCtx {

@@ -3,9 +3,9 @@ mod users;
 
 #[must_use]
 #[derive(Debug, Clone, Copy, Default)]
-pub struct Impl;
+pub struct Repository;
 
-impl Impl {
+impl Repository {
     #[tracing::instrument(skip_all)]
     pub async fn migrate(&self, pool: &sqlx::MySqlPool) -> anyhow::Result<()> {
         use anyhow::Context;

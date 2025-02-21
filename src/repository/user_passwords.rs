@@ -19,7 +19,7 @@ pub trait BcryptConfig: Send + Sync {
     fn bcrypt_cost(&self) -> u32;
 }
 
-impl<Context> crate::entity::UserPasswordRepository<Context> for super::Impl
+impl<Context> crate::entity::UserPasswordRepository<Context> for super::Repository
 where
     Context: BcryptConfig + AsRef<sqlx::MySqlPool>,
 {
