@@ -28,7 +28,7 @@ jobs:
           deno-version: v2.x
       - run: deno install --frozen --node-modules-dir=manual
       - run: deno fmt --check
-      - run: deno lint public
+      - run: deno lint client
       - run: deno task --frozen --node-modules-dir=manual build
 
   ghcr-build:

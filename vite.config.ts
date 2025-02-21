@@ -7,7 +7,7 @@ const cwd = dirname(fileURLToPath(import.meta.url));
 
 // https://vite.dev/config/
 export default defineConfig({
-    root: resolve(cwd, "public"),
+    root: resolve(cwd, "client"),
     plugins: [deno()],
     build: {
         target: "esnext",
@@ -15,10 +15,10 @@ export default defineConfig({
         emptyOutDir: true,
         rollupOptions: {
             input: {
-                index: resolve(cwd, "public/index.html"),
-                login: resolve(cwd, "public/login.html"),
-                me: resolve(cwd, "public/me.html"),
-                signup: resolve(cwd, "public/signup.html"),
+                index: resolve(cwd, "client/index.html"),
+                login: resolve(cwd, "client/login.html"),
+                me: resolve(cwd, "client/me.html"),
+                signup: resolve(cwd, "client/signup.html"),
             },
         },
     },

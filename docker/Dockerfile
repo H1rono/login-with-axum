@@ -44,7 +44,7 @@ WORKDIR /srv
 COPY deno.json deno.lock vite.config.ts ./
 RUN deno install --frozen --node-modules-dir=manual
 
-COPY public ./public
+COPY client ./client
 RUN deno task --frozen --node-modules-dir=manual build
 
 FROM debian:bookworm-slim AS debian-slim

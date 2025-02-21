@@ -22,6 +22,9 @@
         "indentWidth": 4,
         "semiColons": true,
         "singleQuote": false,
-        "include": ["public/", "vite.config.ts"]
+        "include": [
+            "client/",
+            "vite.config.ts"
+        ]
     }
 }
