@@ -2,7 +2,6 @@
 #[derive(Clone)]
 pub struct State {
     // configs
-    pub bcrypt_cost: u32,
     pub cookie_name: String,
     pub path_prefix: String,
     // connections
@@ -32,18 +31,11 @@ impl AsRef<sqlx::MySqlPool> for UserRepoCtx<'_> {
 
 pub struct UserPasswordRepoCtx<'a> {
     pool: &'a sqlx::MySqlPool,
-    bcrypt_cost: u32,
 }
 
 impl AsRef<sqlx::MySqlPool> for UserPasswordRepoCtx<'_> {
     fn as_ref(&self) -> &sqlx::MySqlPool {
         self.pool
-    }
-}
-
-impl crate::repository::user_passwords::BcryptConfig for UserPasswordRepoCtx<'_> {
-    fn bcrypt_cost(&self) -> u32 {
-        self.bcrypt_cost
     }
 }
 
@@ -64,10 +56,7 @@ impl crate::entity::ProvideUserPasswordRepository for State {
     type UserPasswordRepository = crate::repository::Repository;
 
     fn context(&self) -> Self::Context<'_> {
-        UserPasswordRepoCtx {
-            pool: &self.pool,
-            bcrypt_cost: self.bcrypt_cost,
-        }
+        UserPasswordRepoCtx { pool: &self.pool }
     }
     fn user_password_repository(&self) -> &Self::UserPasswordRepository {
         &self.repo

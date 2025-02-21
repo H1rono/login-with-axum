@@ -17,15 +17,14 @@ async fn main() -> anyhow::Result<()> {
         .or_else(|_| load::pool("NS_MARIADB_"))
         .await?;
     let jwt = load::jwt()?;
-    let bcrypt_cost = load::bcrypt_cost()?;
+    let repo = load::repository()?;
     let path_prefix = load::path_prefix();
     let cookie_name = load::cookie_name();
     let state = lib::State {
-        bcrypt_cost,
         path_prefix,
         cookie_name,
         pool,
-        repo: lib::Repository,
+        repo,
         jwt,
     };
     state.setup().await?;
@@ -85,6 +84,11 @@ mod load {
             .lifetime(lifetime)
             .build();
         Ok(config)
+    }
+
+    pub fn repository() -> anyhow::Result<lib::Repository> {
+        let bcrypt_cost = bcrypt_cost()?;
+        Ok(lib::Repository::new(bcrypt_cost))
     }
 
     pub fn bcrypt_cost() -> anyhow::Result<u32> {

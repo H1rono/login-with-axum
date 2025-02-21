@@ -14,21 +14,16 @@ struct DbUserPassword {
     psk: DbPsk,
 }
 
-#[must_use]
-pub trait BcryptConfig: Send + Sync {
-    fn bcrypt_cost(&self) -> u32;
-}
-
 impl<Context> crate::entity::UserPasswordRepository<Context> for super::Repository
 where
-    Context: BcryptConfig + AsRef<sqlx::MySqlPool>,
+    Context: AsRef<sqlx::MySqlPool> + Send + Sync,
 {
     async fn save_user_password(
         &self,
         ctx: Context,
         params: crate::entity::SaveUserPasswordParams,
     ) -> Result<(), Failure> {
-        let psk = bcrypt::hash(params.raw, ctx.bcrypt_cost()).context("Failed to hash password")?;
+        let psk = bcrypt::hash(params.raw, self.bcrypt_cost).context("Failed to hash password")?;
         let password = DbUserPassword {
             id: params.user_id.into(),
             psk: DbPsk(psk),
