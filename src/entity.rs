@@ -1,5 +1,3 @@
-use std::future::Future;
-
 use serde::{Deserialize, Serialize};
 
 use crate::error::Failure;

@@ -2,8 +2,6 @@ use login_with_axum as lib;
 
 #[tokio::main(flavor = "current_thread")]
 async fn main() -> anyhow::Result<()> {
-    use std::sync::Arc;
-
     use futures::TryFutureExt;
     use tower_http::trace::TraceLayer;
     use tracing_subscriber::EnvFilter;
@@ -28,7 +26,8 @@ async fn main() -> anyhow::Result<()> {
         jwt,
     };
     state.setup().await?;
-    let app = lib::make_router(Arc::new(state)).layer(TraceLayer::new_for_http());
+    let state = std::sync::Arc::new(state);
+    let app = lib::make_router(state).layer(TraceLayer::new_for_http());
     let port: u16 = load::port()?;
     let addr = std::net::SocketAddr::from(([0, 0, 0, 0], port));
     let listener = tokio::net::TcpListener::bind(addr).await?;
