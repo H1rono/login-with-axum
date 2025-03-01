@@ -16,7 +16,7 @@ struct DbUserPassword {
 
 impl<Context> crate::entity::UserPasswordRepository<Context> for super::Repository
 where
-    Context: AsRef<sqlx::MySqlPool> + Send + Sync,
+    Context: super::AsMySqlPool,
 {
     async fn save_user_password(
         &self,
@@ -31,7 +31,7 @@ where
         sqlx::query("INSERT INTO `user_passwords` (`user_id`, `psk`) VALUES (?, ?)")
             .bind(password.id)
             .bind(password.psk)
-            .execute(ctx.as_ref())
+            .execute(ctx.as_mysql_pool())
             .await
             .context("Failed to insert user password")?;
         Ok(())
@@ -44,7 +44,7 @@ where
     ) -> Result<bool, Failure> {
         let DbPsk(psk) = sqlx::query_as("SELECT * FROM `user_passwords` WHERE `user_id` = ?")
             .bind(DbUserId::from(params.user_id))
-            .fetch_optional(ctx.as_ref())
+            .fetch_optional(ctx.as_mysql_pool())
             .await
             .context("Failed to get user password")?
             .map(|p: DbUserPassword| p.psk)

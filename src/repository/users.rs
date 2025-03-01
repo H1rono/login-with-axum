@@ -43,11 +43,11 @@ impl From<DbUser> for User {
 
 impl<Context> crate::entity::UserRepository<Context> for super::Repository
 where
-    Context: AsRef<sqlx::MySqlPool> + Send + Sync,
+    Context: super::AsMySqlPool,
 {
     async fn get_users(&self, ctx: Context) -> Result<Vec<User>, Failure> {
         let users = sqlx::query_as("SELECT * FROM `users`")
-            .fetch_all(ctx.as_ref())
+            .fetch_all(ctx.as_mysql_pool())
             .await
             .context("Failed to fetch users")?
             .into_iter()
@@ -63,7 +63,7 @@ where
     ) -> Result<User, Failure> {
         use crate::entity::GetUserParams::{ByDisplayId, ById};
 
-        let pool = ctx.as_ref();
+        let pool = ctx.as_mysql_pool();
         match params {
             ById(id) => self.get_user_by_id(pool, id).await,
             ByDisplayId(display_id) => self.get_user_by_display_id(pool, &display_id).await,
@@ -77,7 +77,7 @@ where
     ) -> Result<User, Failure> {
         use crate::error::RejectKind;
 
-        let pool = ctx.as_ref();
+        let pool = ctx.as_mysql_pool();
         match self.get_user_by_display_id(pool, &params.display_id).await {
             Ok(_) => {
                 return Err(Failure::conflict(

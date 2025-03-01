@@ -21,3 +21,22 @@ impl Repository {
         MIGRATOR.run(pool).await.context("Failed to mgirate")
     }
 }
+
+pub trait AsMySqlPool: Send + Sync {
+    fn as_mysql_pool(&self) -> &sqlx::MySqlPool;
+}
+
+impl AsMySqlPool for sqlx::MySqlPool {
+    fn as_mysql_pool(&self) -> &sqlx::MySqlPool {
+        self
+    }
+}
+
+impl<T> AsMySqlPool for &T
+where
+    T: AsMySqlPool,
+{
+    fn as_mysql_pool(&self) -> &sqlx::MySqlPool {
+        T::as_mysql_pool(self)
+    }
+}

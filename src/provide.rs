@@ -23,8 +23,8 @@ impl crate::router::RouteConfig for State {
 
 pub struct UserRepoCtx<'a>(&'a sqlx::MySqlPool);
 
-impl AsRef<sqlx::MySqlPool> for UserRepoCtx<'_> {
-    fn as_ref(&self) -> &sqlx::MySqlPool {
+impl crate::repository::AsMySqlPool for UserRepoCtx<'_> {
+    fn as_mysql_pool(&self) -> &sqlx::MySqlPool {
         self.0
     }
 }
@@ -33,8 +33,8 @@ pub struct UserPasswordRepoCtx<'a> {
     pool: &'a sqlx::MySqlPool,
 }
 
-impl AsRef<sqlx::MySqlPool> for UserPasswordRepoCtx<'_> {
-    fn as_ref(&self) -> &sqlx::MySqlPool {
+impl crate::repository::AsMySqlPool for UserPasswordRepoCtx<'_> {
+    fn as_mysql_pool(&self) -> &sqlx::MySqlPool {
         self.pool
     }
 }
