@@ -84,11 +84,7 @@ impl<S> std::clone::Clone for AppState<S> {
 
 impl<S> AppState<S>
 where
-    S: entity::ProvideUserRepository
-        + entity::ProvideUserPasswordRepository
-        + entity::ProvideCredentialManager
-        + RouteConfig
-        + 'static,
+    S: entity::ProvideUserRegistry + entity::ProvideCredentialManager + RouteConfig + 'static,
 {
     async fn register(
         self,
@@ -100,13 +96,12 @@ where
             name,
             password,
         } = req;
-        let params = entity::CreateUserParams { display_id, name };
-        let user = self.create_user(params).await?;
-        let params = entity::SaveUserPasswordParams {
-            user_id: user.id,
-            raw: password,
+        let params = entity::RegisterUserParams {
+            display_id,
+            name,
+            raw_password: password,
         };
-        self.save_user_password(params).await?;
+        let _user = self.register_user(params).await?;
         let login_path = format!("{}login.html", &self.path_prefix());
         Ok(Redirect::to(&login_path))
     }
@@ -191,11 +186,7 @@ where
 
 pub fn make<S>(state: Arc<S>) -> axum::Router
 where
-    S: entity::ProvideUserRepository
-        + entity::ProvideUserPasswordRepository
-        + entity::ProvideCredentialManager
-        + RouteConfig
-        + 'static,
+    S: entity::ProvideUserRegistry + entity::ProvideCredentialManager + RouteConfig + 'static,
 {
     use tower_http::services::ServeDir;
 

@@ -93,6 +93,18 @@ impl crate::entity::ProvideCredentialManager for State {
     }
 }
 
+impl crate::entity::ProvideUserRegistry for State {
+    type Context = RepoState;
+    type UserRegistry = crate::registry::Registry;
+
+    fn context(&self) -> &Self::Context {
+        &self.repo
+    }
+    fn user_registry(&self) -> &crate::registry::Registry {
+        &self.registry
+    }
+}
+
 impl State {
     pub fn new(init: StateInit) -> Self {
         let StateInit {
