@@ -9,6 +9,7 @@ pub struct State {
     // entity trait impls
     pub repo: crate::repository::Repository,
     pub jwt: crate::token::Jwt,
+    pub registry: crate::registry::Registry,
 }
 
 impl crate::router::RouteConfig for State {

@@ -189,3 +189,88 @@ pub trait ProvideCredentialManager: Send + Sync {
         self.credential_manager().check_credential(ctx, credential)
     }
 }
+
+// MARK: UserRegistry
+
+#[must_use]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Deserialize, Serialize)]
+pub struct RegisterUserParams {
+    pub display_id: String,
+    pub name: String,
+    pub raw_password: String,
+}
+
+#[must_use]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Deserialize, Serialize)]
+pub struct UpdateUserPasswordParams {
+    pub user_id: UserId,
+    #[serde(rename = "password")]
+    pub new_raw: String,
+}
+
+#[must_use]
+pub trait UserRegistry<Context>: Send + Sync {
+    fn get_user(
+        &self,
+        ctx: &Context,
+        params: GetUserParams,
+    ) -> impl Future<Output = Result<User, Failure>> + Send;
+    fn get_users(&self, ctx: &Context) -> impl Future<Output = Result<Vec<User>, Failure>> + Send;
+    fn register_user(
+        &self,
+        ctx: &Context,
+        params: RegisterUserParams,
+    ) -> impl Future<Output = Result<User, Failure>> + Send;
+    fn verify_user_password(
+        &self,
+        ctx: &Context,
+        params: VerifyUserPasswordParams,
+    ) -> impl Future<Output = Result<bool, Failure>> + Send;
+    fn update_user_password(
+        &self,
+        ctx: &Context,
+        params: UpdateUserPasswordParams,
+    ) -> impl Future<Output = Result<(), Failure>> + Send;
+}
+
+#[must_use]
+pub trait ProvideUserRegistry: Send + Sync {
+    type Context;
+    type UserRegistry: UserRegistry<Self::Context>;
+
+    fn context(&self) -> &Self::Context;
+    fn user_registry(&self) -> &Self::UserRegistry;
+
+    fn get_user(
+        &self,
+        params: GetUserParams,
+    ) -> impl Future<Output = Result<User, Failure>> + Send {
+        let ctx = self.context();
+        self.user_registry().get_user(ctx, params)
+    }
+    fn get_users(&self) -> impl Future<Output = Result<Vec<User>, Failure>> + Send {
+        let ctx = self.context();
+        self.user_registry().get_users(ctx)
+    }
+    fn register_user(
+        &self,
+        params: RegisterUserParams,
+    ) -> impl Future<Output = Result<User, Failure>> + Send {
+        let ctx = self.context();
+        self.user_registry().register_user(ctx, params)
+    }
+    fn verify_user_password(
+        &self,
+        params: VerifyUserPasswordParams,
+    ) -> impl Future<Output = Result<bool, Failure>> + Send {
+        let ctx = self.context();
+        self.user_registry().verify_user_password(ctx, params)
+    }
+    fn update_user_password(
+        &self,
+        params: UpdateUserPasswordParams,
+    ) -> impl Future<Output = Result<(), Failure>> + Send {
+        let ctx = self.context();
+        self.user_registry().update_user_password(ctx, params)
+    }
+}

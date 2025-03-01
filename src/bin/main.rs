@@ -16,6 +16,7 @@ async fn main() -> anyhow::Result<()> {
         .await?;
     let jwt = load::jwt()?;
     let repo = load::repository()?;
+    let registry = lib::Registry::new();
     let path_prefix = load::path_prefix();
     let cookie_name = load::cookie_name();
     let state = lib::State {
@@ -24,6 +25,7 @@ async fn main() -> anyhow::Result<()> {
         pool,
         repo,
         jwt,
+        registry,
     };
     state.setup().await?;
     let state = std::sync::Arc::new(state);
