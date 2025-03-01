@@ -7,7 +7,7 @@ mod router;
 pub mod token;
 
 use error::Failure;
-pub use provide::State;
+pub use provide::{State, StateInit};
 pub use registry::Registry;
 pub use repository::Repository;
 pub use router::make as make_router;

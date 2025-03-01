@@ -16,17 +16,15 @@ async fn main() -> anyhow::Result<()> {
         .await?;
     let jwt = load::jwt()?;
     let repo = load::repository()?;
-    let registry = lib::Registry::new();
     let path_prefix = load::path_prefix();
     let cookie_name = load::cookie_name();
-    let state = lib::State {
+    let state = lib::State::new(lib::StateInit {
         path_prefix,
         cookie_name,
         pool,
         repo,
         jwt,
-        registry,
-    };
+    });
     state.setup().await?;
     let state = std::sync::Arc::new(state);
     let app = lib::make_router(state).layer(TraceLayer::new_for_http());
