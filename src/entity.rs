@@ -33,27 +33,25 @@ pub struct CreateUserParams {
 
 #[must_use]
 pub trait UserRepository<Context>: Send + Sync {
-    fn get_users(&self, ctx: Context) -> impl Future<Output = Result<Vec<User>, Failure>> + Send;
+    fn get_users(&self, ctx: &Context) -> impl Future<Output = Result<Vec<User>, Failure>> + Send;
     fn get_user(
         &self,
-        ctx: Context,
+        ctx: &Context,
         params: GetUserParams,
     ) -> impl Future<Output = Result<User, Failure>> + Send;
     fn create_user(
         &self,
-        ctx: Context,
+        ctx: &Context,
         params: CreateUserParams,
     ) -> impl Future<Output = Result<User, Failure>> + Send;
 }
 
 #[must_use]
 pub trait ProvideUserRepository: Send + Sync {
-    type Context<'a>
-    where
-        Self: 'a;
-    type UserRepository: for<'a> UserRepository<Self::Context<'a>>;
+    type Context;
+    type UserRepository: UserRepository<Self::Context>;
 
-    fn context(&self) -> Self::Context<'_>;
+    fn context(&self) -> &Self::Context;
     fn user_repository(&self) -> &Self::UserRepository;
 
     fn get_users(&self) -> impl Future<Output = Result<Vec<User>, Failure>> + Send {
@@ -94,24 +92,22 @@ pub struct VerifyUserPasswordParams {
 pub trait UserPasswordRepository<Context>: Send + Sync {
     fn save_user_password(
         &self,
-        ctx: Context,
+        ctx: &Context,
         params: SaveUserPasswordParams,
     ) -> impl Future<Output = Result<(), Failure>> + Send;
     fn verify_user_password(
         &self,
-        ctx: Context,
+        ctx: &Context,
         params: VerifyUserPasswordParams,
     ) -> impl Future<Output = Result<bool, Failure>> + Send;
 }
 
 #[must_use]
 pub trait ProvideUserPasswordRepository: Send + Sync {
-    type Context<'a>
-    where
-        Self: 'a;
-    type UserPasswordRepository: for<'a> UserPasswordRepository<Self::Context<'a>>;
+    type Context;
+    type UserPasswordRepository: UserPasswordRepository<Self::Context>;
 
-    fn context(&self) -> Self::Context<'_>;
+    fn context(&self) -> &Self::Context;
     fn user_password_repository(&self) -> &Self::UserPasswordRepository;
 
     fn save_user_password(
@@ -148,29 +144,27 @@ pub struct MakeCredentialParams {
 pub trait CredentialManager<Context>: Send + Sync {
     fn make_credential(
         &self,
-        ctx: Context,
+        ctx: &Context,
         params: MakeCredentialParams,
     ) -> impl Future<Output = Result<Credential, Failure>> + Send;
     fn revoke_credential(
         &self,
-        ctx: Context,
+        ctx: &Context,
         credential: Credential,
     ) -> impl Future<Output = Result<(), Failure>> + Send;
     fn check_credential(
         &self,
-        ctx: Context,
+        ctx: &Context,
         credential: Credential,
     ) -> impl Future<Output = Result<UserId, Failure>> + Send;
 }
 
 #[must_use]
 pub trait ProvideCredentialManager: Send + Sync {
-    type Context<'a>
-    where
-        Self: 'a;
-    type CredentialManager: for<'a> CredentialManager<Self::Context<'a>>;
+    type Context;
+    type CredentialManager: CredentialManager<Self::Context>;
 
-    fn context(&self) -> Self::Context<'_>;
+    fn context(&self) -> &Self::Context;
     fn credential_manager(&self) -> &Self::CredentialManager;
 
     fn make_credential(

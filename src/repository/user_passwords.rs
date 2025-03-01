@@ -20,7 +20,7 @@ where
 {
     async fn save_user_password(
         &self,
-        ctx: Context,
+        ctx: &Context,
         params: crate::entity::SaveUserPasswordParams,
     ) -> Result<(), Failure> {
         let psk = bcrypt::hash(params.raw, self.bcrypt_cost).context("Failed to hash password")?;
@@ -39,7 +39,7 @@ where
 
     async fn verify_user_password(
         &self,
-        ctx: Context,
+        ctx: &Context,
         params: crate::entity::VerifyUserPasswordParams,
     ) -> Result<bool, Failure> {
         let DbPsk(psk) = sqlx::query_as("SELECT * FROM `user_passwords` WHERE `user_id` = ?")
