@@ -28,6 +28,12 @@ impl crate::entity::ProvideUserPasswordRepository for RepoState {
     }
 }
 
+impl RepoState {
+    async fn setup(&self) -> anyhow::Result<()> {
+        self.repo.migrate(&self.pool).await
+    }
+}
+
 #[derive(Clone)]
 pub struct StateInit {
     pub cookie_name: String,
@@ -54,30 +60,6 @@ impl crate::router::RouteConfig for State {
 
     fn path_prefix(&self) -> &str {
         &self.path_prefix
-    }
-}
-
-impl crate::entity::ProvideUserRepository for State {
-    type Context = sqlx::MySqlPool;
-    type UserRepository = crate::repository::Repository;
-
-    fn context(&self) -> &Self::Context {
-        &self.repo.pool
-    }
-    fn user_repository(&self) -> &Self::UserRepository {
-        &self.repo.repo
-    }
-}
-
-impl crate::entity::ProvideUserPasswordRepository for State {
-    type Context = sqlx::MySqlPool;
-    type UserPasswordRepository = crate::repository::Repository;
-
-    fn context(&self) -> &Self::Context {
-        &self.repo.pool
-    }
-    fn user_password_repository(&self) -> &Self::UserPasswordRepository {
-        &self.repo.repo
     }
 }
 
@@ -126,6 +108,6 @@ impl State {
     }
 
     pub async fn setup(&self) -> anyhow::Result<()> {
-        self.repo.repo.migrate(&self.repo.pool).await
+        self.repo.setup().await
     }
 }
