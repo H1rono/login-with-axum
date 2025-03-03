@@ -33,15 +33,15 @@ pub struct CreateUserParams {
 
 #[must_use]
 pub trait UserRepository<Context>: Send + Sync {
-    fn get_users(&self, ctx: &Context) -> impl Future<Output = Result<Vec<User>, Failure>> + Send;
+    fn get_users(&self, ctx: Context) -> impl Future<Output = Result<Vec<User>, Failure>> + Send;
     fn get_user(
         &self,
-        ctx: &Context,
+        ctx: Context,
         params: GetUserParams,
     ) -> impl Future<Output = Result<User, Failure>> + Send;
     fn create_user(
         &self,
-        ctx: &Context,
+        ctx: Context,
         params: CreateUserParams,
     ) -> impl Future<Output = Result<User, Failure>> + Send;
 }
@@ -92,12 +92,12 @@ pub struct VerifyUserPasswordParams {
 pub trait UserPasswordRepository<Context>: Send + Sync {
     fn save_user_password(
         &self,
-        ctx: &Context,
+        ctx: Context,
         params: SaveUserPasswordParams,
     ) -> impl Future<Output = Result<(), Failure>> + Send;
     fn verify_user_password(
         &self,
-        ctx: &Context,
+        ctx: Context,
         params: VerifyUserPasswordParams,
     ) -> impl Future<Output = Result<bool, Failure>> + Send;
 }
@@ -144,17 +144,17 @@ pub struct MakeCredentialParams {
 pub trait CredentialManager<Context>: Send + Sync {
     fn make_credential(
         &self,
-        ctx: &Context,
+        ctx: Context,
         params: MakeCredentialParams,
     ) -> impl Future<Output = Result<Credential, Failure>> + Send;
     fn revoke_credential(
         &self,
-        ctx: &Context,
+        ctx: Context,
         credential: Credential,
     ) -> impl Future<Output = Result<(), Failure>> + Send;
     fn check_credential(
         &self,
-        ctx: &Context,
+        ctx: Context,
         credential: Credential,
     ) -> impl Future<Output = Result<UserId, Failure>> + Send;
 }
@@ -212,23 +212,23 @@ pub struct UpdateUserPasswordParams {
 pub trait UserRegistry<Context>: Send + Sync {
     fn get_user(
         &self,
-        ctx: &Context,
+        ctx: Context,
         params: GetUserParams,
     ) -> impl Future<Output = Result<User, Failure>> + Send;
-    fn get_users(&self, ctx: &Context) -> impl Future<Output = Result<Vec<User>, Failure>> + Send;
+    fn get_users(&self, ctx: Context) -> impl Future<Output = Result<Vec<User>, Failure>> + Send;
     fn register_user(
         &self,
-        ctx: &Context,
+        ctx: Context,
         params: RegisterUserParams,
     ) -> impl Future<Output = Result<User, Failure>> + Send;
     fn verify_user_password(
         &self,
-        ctx: &Context,
+        ctx: Context,
         params: VerifyUserPasswordParams,
     ) -> impl Future<Output = Result<bool, Failure>> + Send;
     fn update_user_password(
         &self,
-        ctx: &Context,
+        ctx: Context,
         params: UpdateUserPasswordParams,
     ) -> impl Future<Output = Result<(), Failure>> + Send;
 }

@@ -44,7 +44,7 @@ where
 {
     async fn make_credential(
         &self,
-        _ctx: &Context,
+        _ctx: Context,
         params: crate::entity::MakeCredentialParams,
     ) -> Result<Credential, Failure> {
         let iat = jwt::get_current_timestamp();
@@ -60,7 +60,7 @@ where
 
     async fn revoke_credential(
         &self,
-        _ctx: &Context,
+        _ctx: Context,
         _credential: Credential,
     ) -> Result<(), Failure> {
         todo!()
@@ -68,7 +68,7 @@ where
 
     async fn check_credential(
         &self,
-        _ctx: &Context,
+        _ctx: Context,
         credential: Credential,
     ) -> Result<UserId, Failure> {
         let Credential(token) = credential;

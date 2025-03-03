@@ -45,7 +45,7 @@ impl<Context> crate::entity::UserRepository<Context> for super::Repository
 where
     Context: super::AsMySqlPool,
 {
-    async fn get_users(&self, ctx: &Context) -> Result<Vec<User>, Failure> {
+    async fn get_users(&self, ctx: Context) -> Result<Vec<User>, Failure> {
         let users = sqlx::query_as("SELECT * FROM `users`")
             .fetch_all(ctx.as_mysql_pool())
             .await
@@ -58,7 +58,7 @@ where
 
     async fn get_user(
         &self,
-        ctx: &Context,
+        ctx: Context,
         params: crate::entity::GetUserParams,
     ) -> Result<User, Failure> {
         use crate::entity::GetUserParams::{ByDisplayId, ById};
@@ -72,7 +72,7 @@ where
 
     async fn create_user(
         &self,
-        ctx: &Context,
+        ctx: Context,
         params: crate::entity::CreateUserParams,
     ) -> Result<User, Failure> {
         use crate::error::RejectKind;

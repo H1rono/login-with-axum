@@ -20,19 +20,19 @@ where
 {
     async fn get_user(
         &self,
-        ctx: &Context,
+        ctx: Context,
         params: entity::GetUserParams,
     ) -> Result<entity::User, Failure> {
         ctx.get_user(params).await
     }
 
-    async fn get_users(&self, ctx: &Context) -> Result<Vec<entity::User>, Failure> {
+    async fn get_users(&self, ctx: Context) -> Result<Vec<entity::User>, Failure> {
         ctx.get_users().await
     }
 
     async fn register_user(
         &self,
-        ctx: &Context,
+        ctx: Context,
         params: entity::RegisterUserParams,
     ) -> Result<entity::User, Failure> {
         let entity::RegisterUserParams {
@@ -52,7 +52,7 @@ where
 
     async fn update_user_password(
         &self,
-        ctx: &Context,
+        ctx: Context,
         params: entity::UpdateUserPasswordParams,
     ) -> Result<(), Failure> {
         let entity::UpdateUserPasswordParams {
@@ -65,7 +65,7 @@ where
 
     async fn verify_user_password(
         &self,
-        ctx: &Context,
+        ctx: Context,
         params: entity::VerifyUserPasswordParams,
     ) -> Result<bool, Failure> {
         ctx.verify_user_password(params).await
