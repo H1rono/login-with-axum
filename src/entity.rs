@@ -46,6 +46,29 @@ pub trait UserRepository<Context>: Send + Sync {
     ) -> impl Future<Output = Result<User, Failure>> + Send;
 }
 
+impl<T, C> UserRepository<C> for &T
+where
+    T: UserRepository<C>,
+{
+    fn get_users(&self, ctx: C) -> impl Future<Output = Result<Vec<User>, Failure>> + Send {
+        T::get_users(self, ctx)
+    }
+    fn get_user(
+        &self,
+        ctx: C,
+        params: GetUserParams,
+    ) -> impl Future<Output = Result<User, Failure>> + Send {
+        T::get_user(self, ctx, params)
+    }
+    fn create_user(
+        &self,
+        ctx: C,
+        params: CreateUserParams,
+    ) -> impl Future<Output = Result<User, Failure>> + Send {
+        T::create_user(self, ctx, params)
+    }
+}
+
 #[must_use]
 pub trait ProvideUserRepository: Send + Sync {
     type Context<'a>
@@ -78,6 +101,27 @@ pub trait ProvideUserRepository: Send + Sync {
     }
 }
 
+impl<T> ProvideUserRepository for &T
+where
+    T: ProvideUserRepository,
+{
+    type Context<'a>
+        = T::Context<'a>
+    where
+        Self: 'a;
+    type UserRepository<'a>
+        = T::UserRepository<'a>
+    where
+        Self: 'a;
+
+    fn context(&self) -> Self::Context<'_> {
+        T::context(self)
+    }
+    fn user_repository(&self) -> &Self::UserRepository<'_> {
+        T::user_repository(self)
+    }
+}
+
 // MARK: UserPasswordRepository
 
 #[must_use]
@@ -104,6 +148,26 @@ pub trait UserPasswordRepository<Context>: Send + Sync {
         ctx: Context,
         params: VerifyUserPasswordParams,
     ) -> impl Future<Output = Result<bool, Failure>> + Send;
+}
+
+impl<T, C> UserPasswordRepository<C> for &T
+where
+    T: UserPasswordRepository<C>,
+{
+    fn save_user_password(
+        &self,
+        ctx: C,
+        params: SaveUserPasswordParams,
+    ) -> impl Future<Output = Result<(), Failure>> + Send {
+        T::save_user_password(self, ctx, params)
+    }
+    fn verify_user_password(
+        &self,
+        ctx: C,
+        params: VerifyUserPasswordParams,
+    ) -> impl Future<Output = Result<bool, Failure>> + Send {
+        T::verify_user_password(self, ctx, params)
+    }
 }
 
 #[must_use]
@@ -133,6 +197,27 @@ pub trait ProvideUserPasswordRepository: Send + Sync {
         let ctx = self.context();
         self.user_password_repository()
             .verify_user_password(ctx, params)
+    }
+}
+
+impl<T> ProvideUserPasswordRepository for &T
+where
+    T: ProvideUserPasswordRepository,
+{
+    type Context<'a>
+        = T::Context<'a>
+    where
+        Self: 'a;
+    type UserPasswordRepository<'a>
+        = T::UserPasswordRepository<'a>
+    where
+        Self: 'a;
+
+    fn context(&self) -> Self::Context<'_> {
+        T::context(self)
+    }
+    fn user_password_repository(&self) -> &Self::UserPasswordRepository<'_> {
+        T::user_password_repository(self)
     }
 }
 
@@ -167,6 +252,33 @@ pub trait CredentialManager<Context>: Send + Sync {
     ) -> impl Future<Output = Result<UserId, Failure>> + Send;
 }
 
+impl<T, C> CredentialManager<C> for &T
+where
+    T: CredentialManager<C>,
+{
+    fn make_credential(
+        &self,
+        ctx: C,
+        params: MakeCredentialParams,
+    ) -> impl Future<Output = Result<Credential, Failure>> + Send {
+        T::make_credential(self, ctx, params)
+    }
+    fn revoke_credential(
+        &self,
+        ctx: C,
+        credential: Credential,
+    ) -> impl Future<Output = Result<(), Failure>> + Send {
+        T::revoke_credential(self, ctx, credential)
+    }
+    fn check_credential(
+        &self,
+        ctx: C,
+        credential: Credential,
+    ) -> impl Future<Output = Result<UserId, Failure>> + Send {
+        T::check_credential(self, ctx, credential)
+    }
+}
+
 #[must_use]
 pub trait ProvideCredentialManager: Send + Sync {
     type Context<'a>
@@ -199,6 +311,27 @@ pub trait ProvideCredentialManager: Send + Sync {
     ) -> impl Future<Output = Result<UserId, Failure>> + Send {
         let ctx = self.context();
         self.credential_manager().check_credential(ctx, credential)
+    }
+}
+
+impl<T> ProvideCredentialManager for &T
+where
+    T: ProvideCredentialManager,
+{
+    type Context<'a>
+        = T::Context<'a>
+    where
+        Self: 'a;
+    type CredentialManager<'a>
+        = T::CredentialManager<'a>
+    where
+        Self: 'a;
+
+    fn context(&self) -> Self::Context<'_> {
+        T::context(self)
+    }
+    fn credential_manager(&self) -> &Self::CredentialManager<'_> {
+        T::credential_manager(self)
     }
 }
 
@@ -245,6 +378,43 @@ pub trait UserRegistry<Context>: Send + Sync {
     ) -> impl Future<Output = Result<(), Failure>> + Send;
 }
 
+impl<T, C> UserRegistry<C> for &T
+where
+    T: UserRegistry<C>,
+{
+    fn get_user(
+        &self,
+        ctx: C,
+        params: GetUserParams,
+    ) -> impl Future<Output = Result<User, Failure>> + Send {
+        T::get_user(self, ctx, params)
+    }
+    fn get_users(&self, ctx: C) -> impl Future<Output = Result<Vec<User>, Failure>> + Send {
+        T::get_users(self, ctx)
+    }
+    fn register_user(
+        &self,
+        ctx: C,
+        params: RegisterUserParams,
+    ) -> impl Future<Output = Result<User, Failure>> + Send {
+        T::register_user(self, ctx, params)
+    }
+    fn verify_user_password(
+        &self,
+        ctx: C,
+        params: VerifyUserPasswordParams,
+    ) -> impl Future<Output = Result<bool, Failure>> + Send {
+        T::verify_user_password(self, ctx, params)
+    }
+    fn update_user_password(
+        &self,
+        ctx: C,
+        params: UpdateUserPasswordParams,
+    ) -> impl Future<Output = Result<(), Failure>> + Send {
+        T::update_user_password(self, ctx, params)
+    }
+}
+
 #[must_use]
 pub trait ProvideUserRegistry: Send + Sync {
     type Context<'a>
@@ -288,5 +458,26 @@ pub trait ProvideUserRegistry: Send + Sync {
     ) -> impl Future<Output = Result<(), Failure>> + Send {
         let ctx = self.context();
         self.user_registry().update_user_password(ctx, params)
+    }
+}
+
+impl<T> ProvideUserRegistry for &T
+where
+    T: ProvideUserRegistry,
+{
+    type Context<'a>
+        = T::Context<'a>
+    where
+        Self: 'a;
+    type UserRegistry<'a>
+        = T::UserRegistry<'a>
+    where
+        Self: 'a;
+
+    fn context(&self) -> Self::Context<'_> {
+        T::context(self)
+    }
+    fn user_registry(&self) -> &Self::UserRegistry<'_> {
+        T::user_registry(self)
     }
 }
