@@ -48,11 +48,15 @@ pub trait UserRepository<Context>: Send + Sync {
 
 #[must_use]
 pub trait ProvideUserRepository: Send + Sync {
-    type Context;
-    type UserRepository: UserRepository<Self::Context>;
+    type Context<'a>
+    where
+        Self: 'a;
+    type UserRepository<'a>: UserRepository<Self::Context<'a>>
+    where
+        Self: 'a;
 
-    fn context(&self) -> &Self::Context;
-    fn user_repository(&self) -> &Self::UserRepository;
+    fn context(&self) -> Self::Context<'_>;
+    fn user_repository(&self) -> &Self::UserRepository<'_>;
 
     fn get_users(&self) -> impl Future<Output = Result<Vec<User>, Failure>> + Send {
         let ctx = self.context();
@@ -104,11 +108,15 @@ pub trait UserPasswordRepository<Context>: Send + Sync {
 
 #[must_use]
 pub trait ProvideUserPasswordRepository: Send + Sync {
-    type Context;
-    type UserPasswordRepository: UserPasswordRepository<Self::Context>;
+    type Context<'a>
+    where
+        Self: 'a;
+    type UserPasswordRepository<'a>: UserPasswordRepository<Self::Context<'a>>
+    where
+        Self: 'a;
 
-    fn context(&self) -> &Self::Context;
-    fn user_password_repository(&self) -> &Self::UserPasswordRepository;
+    fn context(&self) -> Self::Context<'_>;
+    fn user_password_repository(&self) -> &Self::UserPasswordRepository<'_>;
 
     fn save_user_password(
         &self,
@@ -161,11 +169,15 @@ pub trait CredentialManager<Context>: Send + Sync {
 
 #[must_use]
 pub trait ProvideCredentialManager: Send + Sync {
-    type Context;
-    type CredentialManager: CredentialManager<Self::Context>;
+    type Context<'a>
+    where
+        Self: 'a;
+    type CredentialManager<'a>: CredentialManager<Self::Context<'a>>
+    where
+        Self: 'a;
 
-    fn context(&self) -> &Self::Context;
-    fn credential_manager(&self) -> &Self::CredentialManager;
+    fn context(&self) -> Self::Context<'_>;
+    fn credential_manager(&self) -> &Self::CredentialManager<'_>;
 
     fn make_credential(
         &self,
@@ -235,11 +247,15 @@ pub trait UserRegistry<Context>: Send + Sync {
 
 #[must_use]
 pub trait ProvideUserRegistry: Send + Sync {
-    type Context;
-    type UserRegistry: UserRegistry<Self::Context>;
+    type Context<'a>
+    where
+        Self: 'a;
+    type UserRegistry<'a>: UserRegistry<Self::Context<'a>>
+    where
+        Self: 'a;
 
-    fn context(&self) -> &Self::Context;
-    fn user_registry(&self) -> &Self::UserRegistry;
+    fn context(&self) -> Self::Context<'_>;
+    fn user_registry(&self) -> &Self::UserRegistry<'_>;
 
     fn get_user(
         &self,

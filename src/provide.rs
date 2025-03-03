@@ -5,25 +5,25 @@ pub struct RepoState {
 }
 
 impl crate::entity::ProvideUserRepository for RepoState {
-    type Context = sqlx::MySqlPool;
-    type UserRepository = crate::repository::Repository;
+    type Context<'a> = &'a sqlx::MySqlPool;
+    type UserRepository<'a> = crate::repository::Repository;
 
-    fn context(&self) -> &Self::Context {
+    fn context(&self) -> Self::Context<'_> {
         &self.pool
     }
-    fn user_repository(&self) -> &Self::UserRepository {
+    fn user_repository(&self) -> &Self::UserRepository<'_> {
         &self.repo
     }
 }
 
 impl crate::entity::ProvideUserPasswordRepository for RepoState {
-    type Context = sqlx::MySqlPool;
-    type UserPasswordRepository = crate::repository::Repository;
+    type Context<'a> = &'a sqlx::MySqlPool;
+    type UserPasswordRepository<'a> = crate::repository::Repository;
 
-    fn context(&self) -> &Self::Context {
+    fn context(&self) -> Self::Context<'_> {
         &self.pool
     }
-    fn user_password_repository(&self) -> &Self::UserPasswordRepository {
+    fn user_password_repository(&self) -> &Self::UserPasswordRepository<'_> {
         &self.repo
     }
 }
@@ -64,25 +64,23 @@ impl crate::router::RouteConfig for State {
 }
 
 impl crate::entity::ProvideCredentialManager for State {
-    type Context = ();
-    type CredentialManager = crate::token::Jwt;
+    type Context<'a> = ();
+    type CredentialManager<'a> = crate::token::Jwt;
 
-    fn context(&self) -> &Self::Context {
-        &()
-    }
-    fn credential_manager(&self) -> &Self::CredentialManager {
+    fn context(&self) -> Self::Context<'_> {}
+    fn credential_manager(&self) -> &Self::CredentialManager<'_> {
         &self.jwt
     }
 }
 
 impl crate::entity::ProvideUserRegistry for State {
-    type Context = RepoState;
-    type UserRegistry = crate::registry::Registry;
+    type Context<'a> = &'a RepoState;
+    type UserRegistry<'a> = crate::registry::Registry;
 
-    fn context(&self) -> &Self::Context {
+    fn context(&self) -> Self::Context<'_> {
         &self.repo
     }
-    fn user_registry(&self) -> &crate::registry::Registry {
+    fn user_registry(&self) -> &Self::UserRegistry<'_> {
         &self.registry
     }
 }
