@@ -13,8 +13,8 @@
         ]
     },
     "imports": {
-        "@deno/vite-plugin": "npm:@deno/vite-plugin@^1.0.0",
-        "vite": "npm:vite@^6.0.1"
+        "@deno/vite-plugin": "npm:@deno/vite-plugin@^1.0.5",
+        "vite": "npm:vite@^7.2.2"
     },
     "fmt": {
         "useTabs": false,
