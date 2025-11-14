@@ -37,7 +37,7 @@ RUN --mount=type=cache,target=/var/cache/rustup,sharing=locked \
     && bash /helper.sh extract_binary "${CARGO_TARGET_DIR}" > /target/main \
     && chmod +x /target/main
 
-FROM --platform=$BUILDPLATFORM denoland/deno:2.2.0 AS frontend-builder
+FROM --platform=$BUILDPLATFORM denoland/deno:2.5.6 AS frontend-builder
 
 WORKDIR /srv
 
