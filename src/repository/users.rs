@@ -86,7 +86,7 @@ where
             }
             Err(Failure::Reject(r)) if r.kind() == RejectKind::NotFound => {}
             Err(e) => return Err(e),
-        };
+        }
         let id = DbUserId(uuid::Uuid::new_v4());
         let crate::entity::CreateUserParams { display_id, name } = params;
         sqlx::query("INSERT INTO `users` (`id`, `display_id`, `name`) VALUES (?, ?, ?)")
