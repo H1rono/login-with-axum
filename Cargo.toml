@@ -21,6 +21,8 @@ axum-extra = { version = "0.12", features = [ "cookie", "typed-header" ] }
 thiserror = "2.0"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+utoipa = { version = "5.4", features = ["axum_extras", "chrono", "uuid", "preserve_order"] }
+utoipa-axum = "0.2"
 
 [dependencies.sqlx]
 version = "0.8"
