@@ -13,7 +13,17 @@ pub trait RouteConfig: Send + Sync {
     fn path_prefix(&self) -> &str;
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+pub trait StateRequirements:
+    entity::ProvideUserRegistry + entity::ProvideCredentialManager + RouteConfig + 'static
+{
+}
+
+impl<S> StateRequirements for S where
+    S: entity::ProvideUserRegistry + entity::ProvideCredentialManager + RouteConfig + 'static
+{
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, utoipa::ToSchema)]
 pub struct RegisterUserRequest {
     pub display_id: String,
     pub name: String,
@@ -82,10 +92,7 @@ impl<S> std::clone::Clone for AppState<S> {
     }
 }
 
-impl<S> AppState<S>
-where
-    S: entity::ProvideUserRegistry + entity::ProvideCredentialManager + RouteConfig + 'static,
-{
+impl<S: StateRequirements> AppState<S> {
     async fn register(
         self,
         Form(req): Form<RegisterUserRequest>,
