@@ -56,10 +56,15 @@ jobs:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      - id: push-image-name
+        env:
+          REPO: ${{ github.repository }}
+        run: |
+          echo "value=ghcr.io/${REPO@L}" >> $GITHUB_OUTPUT
       - id: meta
         uses: docker/metadata-action@v6
         with:
-          images: ghcr.io/${{ github.repository }}
+          images: ${{ steps.push-image-name.outputs.value }}
           tags: |
             type=ref,event=branch
             type=sha
@@ -72,5 +77,5 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           platforms: linux/arm64,linux/amd64,linux/ppc64le,linux/s390x
-          cache-from: type=registry,ref=ghcr.io/${{ github.repository }}:cache-latest
-          cache-to: type=registry,ref=ghcr.io/${{ github.repository }}:cache-latest,mode=max
+          cache-from: type=registry,ref=${{ steps.push-image-name.outputs.value }}:cache-latest
+          cache-to: type=registry,ref=${{ steps.push-image-name.outputs.value }}:cache-latest,mode=max
