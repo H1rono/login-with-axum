@@ -25,7 +25,7 @@ utoipa = { version = "5.4", features = ["axum_extras", "chrono", "uuid", "preser
 utoipa-axum = "0.2"
 
 [dependencies.sqlx]
-version = "0.8"
+version = "0.9"
 features = ["runtime-tokio", "tls-native-tls", "mysql", "chrono", "uuid"]
 
 [lints.clippy]
