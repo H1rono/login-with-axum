@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use anyhow::Context;
-use axum::extract::{Form, Json};
+use axum::extract::{Form, Json, State};
 use axum::response::{IntoResponse, Redirect};
 use axum_extra::extract::cookie;
 use serde::{Deserialize, Serialize};
@@ -94,7 +94,7 @@ impl<S> std::clone::Clone for AppState<S> {
 
 impl<S: StateRequirements> AppState<S> {
     async fn register(
-        self,
+        State(state): State<Self>,
         Form(req): Form<RegisterUserRequest>,
     ) -> Result<Redirect, ErrorResponse> {
         // TODO: validation
@@ -108,31 +108,31 @@ impl<S: StateRequirements> AppState<S> {
             name,
             raw_password: password,
         };
-        let _user = self.register_user(params).await?;
-        let login_path = format!("{}login.html", &self.path_prefix());
+        let _user = state.register_user(params).await?;
+        let login_path = format!("{}login.html", &state.path_prefix());
         Ok(Redirect::to(&login_path))
     }
 
     async fn login(
-        self,
+        State(state): State<Self>,
         cookie_jar: cookie::CookieJar,
         Form(req): Form<LoginUserRequest>,
     ) -> Result<(cookie::CookieJar, Redirect), ErrorResponse> {
         let params = entity::GetUserParams::ByDisplayId(req.display_id);
-        let user = self.get_user(params).await?;
+        let user = state.get_user(params).await?;
         let params = entity::VerifyUserPasswordParams {
             user_id: user.id,
             raw: req.password,
         };
-        let verification = self.verify_user_password(params).await?;
+        let verification = state.verify_user_password(params).await?;
         if !verification {
             let e = Failure::unauthorized("unauthorized");
             return Err(e.into());
         }
         let params = entity::MakeCredentialParams { user_id: user.id };
-        let entity::Credential(cookie_value) = self.make_credential(params).await?;
-        let prefix = self.path_prefix();
-        let cookie = cookie::Cookie::build((self.cookie_name().to_string(), cookie_value))
+        let entity::Credential(cookie_value) = state.make_credential(params).await?;
+        let prefix = state.path_prefix();
+        let cookie = cookie::Cookie::build((state.cookie_name().to_string(), cookie_value))
             .path(prefix.to_string())
             .http_only(true)
             .build();
@@ -142,17 +142,17 @@ impl<S: StateRequirements> AppState<S> {
 
     #[expect(clippy::unused_async)]
     async fn logout(
-        self,
+        State(state): State<Self>,
         cookie_jar: cookie::CookieJar,
     ) -> Result<(cookie::CookieJar, Redirect), ErrorResponse> {
-        let cookie_name = self.cookie_name();
+        let cookie_name = state.cookie_name();
         let cookie_value = cookie_jar
             .get(cookie_name)
             .ok_or_else(|| Failure::unauthorized("Unauthorized"))?
             .value();
         let _credential = entity::Credential(cookie_value.to_string());
         // TODO: self.revoke_credential(credential).await?;
-        let prefix = self.path_prefix();
+        let prefix = state.path_prefix();
         let cookie = cookie::Cookie::build(cookie_name.to_string())
             .removal()
             .path(prefix.to_string())
@@ -162,32 +162,30 @@ impl<S: StateRequirements> AppState<S> {
         Ok((cookie_jar, Redirect::to(prefix)))
     }
 
-    async fn me(self, cookie_jar: cookie::CookieJar) -> Result<Json<entity::User>, ErrorResponse> {
+    async fn me(
+        State(state): State<Self>,
+        cookie_jar: cookie::CookieJar,
+    ) -> Result<Json<entity::User>, ErrorResponse> {
         let session_cookie = cookie_jar
-            .get(self.cookie_name())
+            .get(state.cookie_name())
             .context("Unauthenticated")?
             .value();
         let credential = entity::Credential(session_cookie.to_string());
-        let user_id = self.check_credential(credential).await?;
+        let user_id = state.check_credential(credential).await?;
         // let user_id = app.token_manager.decode(session_cookie)?;
         let params = entity::GetUserParams::ById(user_id);
-        let user = self.get_user(params).await?;
+        let user = state.get_user(params).await?;
         Ok(Json(user))
     }
 
     fn router() -> axum::Router<Self> {
-        use axum::extract::State;
         use axum::routing::{get, post};
 
-        let register = |State(state): State<Self>, req| state.register(req);
-        let login = |State(state): State<Self>, cookie_jar, req| state.login(cookie_jar, req);
-        let logout = |State(state): State<Self>, cookie_jar| state.logout(cookie_jar);
-        let me = |State(state): State<Self>, cookie_jar| state.me(cookie_jar);
         axum::Router::new()
-            .route("/register", post(register))
-            .route("/login", post(login))
-            .route("/logout", post(logout))
-            .route("/me", get(me))
+            .route("/register", post(Self::register))
+            .route("/login", post(Self::login))
+            .route("/logout", post(Self::logout))
+            .route("/me", get(Self::me))
     }
 }
 
