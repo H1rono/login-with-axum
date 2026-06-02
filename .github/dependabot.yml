@@ -7,7 +7,7 @@ updates:
       interval: monthly
       time: "00:00"
       timezone: "Asia/Tokyo"
-    reviewers:
+    assignees:
       - H1rono
     labels:
       - "dependencies"
@@ -38,7 +38,7 @@ updates:
       interval: monthly
       time: "00:00"
       timezone: "Asia/Tokyo"
-    reviewers:
+    assignees:
       - H1rono
     labels:
       - "dependencies"
