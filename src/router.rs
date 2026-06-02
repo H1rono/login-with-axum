@@ -24,13 +24,26 @@ impl<S> StateRequirements for S where
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, utoipa::ToSchema)]
+#[schema(examples(
+    json!({
+        "display_id": "johndoe",
+        "name": "John Doe",
+        "password": "password"
+    })
+))]
 pub struct RegisterUserRequest {
     pub display_id: String,
     pub name: String,
     pub password: String,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, utoipa::ToSchema)]
+#[schema(examples(
+    json!({
+        "display_id": "johndoe",
+        "password": "password"
+    })
+))]
 pub struct LoginUserRequest {
     pub display_id: String,
     pub password: String,
