@@ -19,7 +19,7 @@ WORKDIR /srv
 
 COPY --from=generate-helper /helper.sh /helper.sh
 
-RUN --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
+RUN --mount=type=cache,id=apt-lists-builder,target=/var/lib/apt/lists,sharing=locked \
     bash /helper.sh dpkg_add_architecture \
     && bash /helper.sh install_apt_deps
 
@@ -28,9 +28,8 @@ RUN bash /helper.sh print_config > /cargo-config.toml
 ENV CARGO_TARGET_DIR=/target \
     RUSTUP_HOME=/var/cache/rustup \
     CARGO_HOME=/var/cache/cargo
-RUN --mount=type=cache,target=/var/cache/rustup,sharing=locked \
-    --mount=type=cache,target=/var/cache/rustup,sharing=locked \
-    --mount=type=cache,target=/var/cache/cargo,sharing=locked \
+RUN --mount=type=cache,id=rustup,target=/var/cache/rustup,sharing=locked \
+    --mount=type=cache,id=cargo,target=/var/cache/cargo,sharing=locked \
     --mount=type=bind,source=.,target=. \
     bash /helper.sh add_target \
     && cargo build --release --locked --config /cargo-config.toml \
@@ -51,7 +50,7 @@ FROM debian:bookworm-slim AS debian-slim
 
 WORKDIR /srv
 
-RUN --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
+RUN --mount=type=cache,id=apt-lists-runtime,target=/var/lib/apt/lists,sharing=locked \
     apt-get -qq update \
     && apt-get install -qq --no-install-recommends libssl-dev
 
