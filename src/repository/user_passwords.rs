@@ -32,8 +32,8 @@ where
     ) -> Result<(), Failure> {
         let crate::entity::SaveUserPasswordParams { user_id, raw } = params;
         let psk = bcrypt::hash(raw, self.bcrypt_cost).context("Failed to hash password")?;
-        sqlx::query!(
-            r#"INSERT INTO `user_passwords` (`user_id`, `psk`) VALUES (?, ?)"#,
+        sqlx::query_file!(
+            "src/repository/user_passwords/save_user_password.sql",
             user_id.0,
             psk
         )
@@ -49,12 +49,9 @@ where
         params: crate::entity::VerifyUserPasswordParams,
     ) -> Result<bool, Failure> {
         let crate::entity::VerifyUserPasswordParams { user_id, raw } = params;
-        let DbPsk(psk) = sqlx::query_as!(
+        let DbPsk(psk) = sqlx::query_file_as!(
             DbUserPassword,
-            r#"
-            SELECT p.`user_id` AS `id: DbUserId`, p.`psk`
-            FROM `user_passwords` AS p WHERE p.`user_id` = ?
-            "#,
+            "src/repository/user_passwords/verify_user_password.sql",
             user_id.0
         )
         .fetch_optional(ctx.as_mysql_pool())
