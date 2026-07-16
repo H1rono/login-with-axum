@@ -46,12 +46,12 @@ where
     Context: super::AsMySqlPool,
 {
     async fn get_users(&self, ctx: Context) -> Result<Vec<User>, Failure> {
-        let users = sqlx::query_as("SELECT * FROM `users`")
+        let users = sqlx::query_file_as!(DbUser, "src/repository/users/get_users.sql")
             .fetch_all(ctx.as_mysql_pool())
             .await
             .context("Failed to fetch users")?
             .into_iter()
-            .map(|u: DbUser| u.into())
+            .map(User::from)
             .collect();
         Ok(users)
     }
@@ -89,10 +89,7 @@ where
         }
         let id = DbUserId(uuid::Uuid::new_v4());
         let crate::entity::CreateUserParams { display_id, name } = params;
-        sqlx::query("INSERT INTO `users` (`id`, `display_id`, `name`) VALUES (?, ?, ?)")
-            .bind(id)
-            .bind(display_id)
-            .bind(name)
+        sqlx::query_file!("src/repository/users/create_user.sql", id, display_id, name)
             .execute(pool)
             .await
             .context("Failed to create user")?;
@@ -104,8 +101,7 @@ where
 impl super::Repository {
     async fn get_user_by_id(&self, pool: &sqlx::MySqlPool, id: UserId) -> Result<User, Failure> {
         let id = DbUserId::from(id);
-        let user = sqlx::query_as::<_, DbUser>("SELECT * FROM `users` WHERE `id` = ?")
-            .bind(id)
+        let user = sqlx::query_file_as!(DbUser, "src/repository/users/get_user_by_id.sql", id)
             .fetch_optional(pool)
             .await
             .context("Failed to fetch user by id")?
@@ -118,12 +114,15 @@ impl super::Repository {
         pool: &sqlx::MySqlPool,
         display_id: &str,
     ) -> Result<User, Failure> {
-        let user = sqlx::query_as::<_, DbUser>("SELECT * FROM `users` WHERE `display_id` = ?")
-            .bind(display_id)
-            .fetch_optional(pool)
-            .await
-            .context("Failed to fetch user by display_id")?
-            .ok_or_else(|| Failure::not_found("User not found"))?;
+        let user = sqlx::query_file_as!(
+            DbUser,
+            "src/repository/users/get_user_by_display_id.sql",
+            display_id
+        )
+        .fetch_optional(pool)
+        .await
+        .context("Failed to fetch user by display_id")?
+        .ok_or_else(|| Failure::not_found("User not found"))?;
         Ok(user.into())
     }
 }

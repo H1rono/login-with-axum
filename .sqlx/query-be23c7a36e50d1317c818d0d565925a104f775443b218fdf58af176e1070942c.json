@@ -1,0 +1,48 @@
+{
+  "db_name": "MySQL",
+  "query": "SELECT\n    p.`user_id` AS `id: DbUserId`,\n    p.`psk`\nFROM `user_passwords` AS p\nWHERE p.`user_id` = ?\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id: DbUserId",
+        "type_info": {
+          "type": "String",
+          "flags": "NOT_NULL | PRIMARY_KEY | BINARY | NO_DEFAULT_VALUE",
+          "collation": 63,
+          "max_size": 16
+        },
+        "origin": {
+          "Table": {
+            "table": "db.user_passwords",
+            "name": "user_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "psk",
+        "type_info": {
+          "type": "VarString",
+          "flags": "NOT_NULL | NO_DEFAULT_VALUE",
+          "collation": 224,
+          "max_size": 512
+        },
+        "origin": {
+          "Table": {
+            "table": "db.user_passwords",
+            "name": "psk"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "be23c7a36e50d1317c818d0d565925a104f775443b218fdf58af176e1070942c"
+}

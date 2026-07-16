@@ -1,0 +1,12 @@
+{
+  "db_name": "MySQL",
+  "query": "INSERT INTO `user_passwords` (`user_id`, `psk`)\nVALUES (?, ?)\n",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "5172d5d6313ee167a6534618c8451152c940e137119a1e1806c75b596f6f3796"
+}
