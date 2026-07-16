@@ -7,8 +7,15 @@ use crate::error::Failure;
 #[sqlx(transparent)]
 struct DbPsk(String);
 
+impl From<String> for DbPsk {
+    fn from(value: String) -> Self {
+        Self(value)
+    }
+}
+
 #[derive(Debug, Clone, sqlx::FromRow)]
 struct DbUserPassword {
+    #[expect(unused)]
     #[sqlx(rename = "user_id")]
     id: DbUserId,
     psk: DbPsk,
@@ -23,17 +30,16 @@ where
         ctx: Context,
         params: crate::entity::SaveUserPasswordParams,
     ) -> Result<(), Failure> {
-        let psk = bcrypt::hash(params.raw, self.bcrypt_cost).context("Failed to hash password")?;
-        let password = DbUserPassword {
-            id: params.user_id.into(),
-            psk: DbPsk(psk),
-        };
-        sqlx::query("INSERT INTO `user_passwords` (`user_id`, `psk`) VALUES (?, ?)")
-            .bind(password.id)
-            .bind(password.psk)
-            .execute(ctx.as_mysql_pool())
-            .await
-            .context("Failed to insert user password")?;
+        let crate::entity::SaveUserPasswordParams { user_id, raw } = params;
+        let psk = bcrypt::hash(raw, self.bcrypt_cost).context("Failed to hash password")?;
+        sqlx::query!(
+            r#"INSERT INTO `user_passwords` (`user_id`, `psk`) VALUES (?, ?)"#,
+            user_id.0,
+            psk
+        )
+        .execute(ctx.as_mysql_pool())
+        .await
+        .context("Failed to insert user password")?;
         Ok(())
     }
 
@@ -42,15 +48,22 @@ where
         ctx: Context,
         params: crate::entity::VerifyUserPasswordParams,
     ) -> Result<bool, Failure> {
-        let DbPsk(psk) = sqlx::query_as("SELECT * FROM `user_passwords` WHERE `user_id` = ?")
-            .bind(DbUserId::from(params.user_id))
-            .fetch_optional(ctx.as_mysql_pool())
-            .await
-            .context("Failed to get user password")?
-            .map(|p: DbUserPassword| p.psk)
-            .ok_or_else(|| Failure::not_found("password not found"))?;
+        let crate::entity::VerifyUserPasswordParams { user_id, raw } = params;
+        let DbPsk(psk) = sqlx::query_as!(
+            DbUserPassword,
+            r#"
+            SELECT p.`user_id` AS `id: DbUserId`, p.`psk`
+            FROM `user_passwords` AS p WHERE p.`user_id` = ?
+            "#,
+            user_id.0
+        )
+        .fetch_optional(ctx.as_mysql_pool())
+        .await
+        .context("Failed to get user password")?
+        .map(|p| p.psk)
+        .ok_or_else(|| Failure::not_found("password not found"))?;
         // TODO: log if err
-        let res = bcrypt::verify(params.raw, &psk).context("Failed to challenge bcrypt hash")?;
+        let res = bcrypt::verify(raw, &psk).context("Failed to challenge bcrypt hash")?;
         Ok(res)
     }
 }
