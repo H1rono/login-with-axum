@@ -11,13 +11,37 @@ on:
 jobs:
   rust:
     runs-on: ubuntu-latest
+    services:
+      db:
+        # see /docker/compose.yml
+        image: mariadb:latest
+        env:
+          MARIADB_ROOT_PASSWORD: root
+          MARIADB_USER: db
+          MARIADB_PASSWORD: password
+          MARIADB_DATABASE: db
+        ports:
+          - "3306:3306"
+        options: >-
+          --health-cmd "healthcheck.sh --su-mysql --connect --innodb_initialized"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-start-period 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: mysql://db:password@localhost:3306/db
     steps:
       - uses: actions/checkout@v7
       - uses: Swatinem/rust-cache@v2
-      - run: cargo check
-      - run: cargo build
-      - run: cargo clippy -- -D warnings
-      - run: cargo fmt --all -- --check
+      - run: |
+          eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+          brew install sqlx-cli
+          cargo sqlx database setup
+          cargo check
+          cargo sqlx prepare --check
+          cargo build
+          cargo clippy -- -D warnings
+          cargo fmt --all -- --check
 
   deno:
     runs-on: ubuntu-latest
