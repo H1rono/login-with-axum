@@ -1,4 +1,4 @@
-FROM --platform=$BUILDPLATFORM python:3.12-slim-bookworm AS generate-helper
+FROM --platform=$BUILDPLATFORM python:3.12-slim-trixie AS generate-helper
 
 WORKDIR /srv
 
@@ -13,7 +13,7 @@ RUN --mount=type=bind,source=docker,target=. \
 
 CMD [ "cat", "/helper.sh" ]
 
-FROM --platform=$BUILDPLATFORM rust:bookworm AS builder
+FROM --platform=$BUILDPLATFORM rust:trixie AS builder
 
 WORKDIR /srv
 
@@ -46,7 +46,7 @@ RUN deno install --frozen --node-modules-dir=manual
 COPY client ./client
 RUN deno task --frozen --node-modules-dir=manual build
 
-FROM debian:bookworm-slim AS debian-slim
+FROM debian:trixie-slim AS debian-slim
 
 WORKDIR /srv
 
