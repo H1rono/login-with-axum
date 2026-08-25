@@ -27,7 +27,8 @@ RUN bash /helper.sh print_config > /cargo-config.toml
 
 ENV CARGO_TARGET_DIR=/target \
     RUSTUP_HOME=/var/cache/rustup \
-    CARGO_HOME=/var/cache/cargo
+    CARGO_HOME=/var/cache/cargo \
+    SQLX_OFFLINE=true
 RUN --mount=type=cache,id=rustup,target=/var/cache/rustup,sharing=locked \
     --mount=type=cache,id=cargo,target=/var/cache/cargo,sharing=locked \
     --mount=type=bind,source=.,target=. \
